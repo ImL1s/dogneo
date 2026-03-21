@@ -66,8 +66,12 @@ class ProteinDatabase:
     def load_fasta(self, path: str | Path) -> None:
         """Load protein sequences from FASTA file.
 
-        Expects headers like: >TRANSCRIPT_ID gene=GENE_NAME
-        or standard Ensembl/RefSeq protein FASTA format.
+        Supported header formats:
+        - Ensembl: >TRANSCRIPT gene_symbol:SYMBOL gene:ENSG... (uses gene_symbol)
+        - Simple:  >TRANSCRIPT gene=SYMBOL or gene:SYMBOL
+
+        When multiple isoforms exist per gene, keeps the longest sequence
+        to maximize peptide coverage.
 
         Args:
             path: Path to protein FASTA file.
@@ -97,8 +101,10 @@ class ProteinDatabase:
                     if not val.startswith("ENS"):
                         gene_fallback = val
             gene_name = gene_name or gene_fallback
-            if gene_name and gene_name not in self._by_gene:
-                self._by_gene[gene_name] = seq_str
+            if gene_name:
+                # Keep longest isoform per gene for best peptide coverage
+                if gene_name not in self._by_gene or len(seq_str) > len(self._by_gene[gene_name]):
+                    self._by_gene[gene_name] = seq_str
             count += 1
 
         logger.info("Loaded %d protein sequences from %s", count, path.name)

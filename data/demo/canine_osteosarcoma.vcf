@@ -1,6 +1,7 @@
 ##fileformat=VCFv4.2
 ##reference=CanFam3.1
 ##source=DogNeo_demo_based_on_published_mutations
+##NOTE=Coordinates are approximate; for pipeline demonstration purposes only. Do not cite as real CanFam3.1 loci.
 ##INFO=<ID=ANN,Number=.,Type=String,Description="SnpEff annotation: Allele|Annotation|Impact|Gene_Name|Gene_ID|Feature_Type|Feature_ID|Transcript_BioType|Rank|HGVS.c|HGVS.p|cDNA.pos|CDS.pos|AA.pos|Distance|ERRORS">
 ##INFO=<ID=DP,Number=1,Type=Integer,Description="Read depth">
 ##INFO=<ID=AF,Number=A,Type=Float,Description="Allele frequency">

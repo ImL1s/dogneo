@@ -40,6 +40,7 @@ logs/
 *.bai
 *.vcf
 *.vcf.gz
+!data/demo/*.vcf
 *.fastq
 *.fastq.gz
 *.fq

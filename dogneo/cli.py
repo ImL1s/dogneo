@@ -184,8 +184,8 @@ def rank(
                         binding=BindingPrediction(
                             peptide_sequence=peptide.mut_sequence,
                             allele=allele,
-                            affinity_nm=0.0,  # unknown
-                            percentile_rank=0.0,
+                            affinity_nm=float('nan'),  # unknown — run NetMHCpan
+                            percentile_rank=float('nan'),
                             tool="pending",
                             mhc_class=1,
                         ),
@@ -220,7 +220,7 @@ def rank(
 
         gen = ReportGenerator(llm_router=llm_router)
         gen.generate_html(
-            candidates, sample_id,
+            ranked, sample_id,
             parameters={"VCF": vcf, "Alleles": alleles, "Formats": formats},
             alleles=allele_list,
             output_path=outdir / "report.html",
