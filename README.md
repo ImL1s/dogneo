@@ -141,6 +141,33 @@ dogneo report \
   --llm-tier cli    # free, uses Gemini CLI / Claude Code
 ```
 
+### Re-rank with external binding predictions
+
+```bash
+# After running NetMHCpan on exported FASTA
+dogneo rerank \
+  --candidates results/candidates.json \
+  --binding netmhcpan_output.tsv \
+  --output-dir reranked/
+```
+
+### Design mRNA vaccine construct
+
+```bash
+# Generate codon-optimized mRNA from top candidates
+dogneo design-mrna \
+  --candidates results/candidates.json \
+  --top-n 10 \
+  --output-dir mrna_design/
+```
+
+### Launch interactive dashboard
+
+```bash
+dogneo ui              # Opens browser at localhost:8501
+dogneo ui --demo       # Pre-load demo results
+```
+
 ### Run full Snakemake pipeline
 
 ```bash
@@ -153,8 +180,11 @@ dogneo run --config pipeline_config.yaml
 |---------|-------------|
 | `dogneo setup` | Download reference data (CanFam3.1 proteome) |
 | `dogneo demo` | Run full pipeline on bundled demo data |
-| `dogneo rank` | Rank neoantigens from a VCF file |
+| `dogneo rank` | Rank neoantigens from a VCF file (auto IEDB binding) |
+| `dogneo rerank` | Import external binding results (NetMHCpan/MHCflurry) and re-score |
+| `dogneo design-mrna` | Generate codon-optimized mRNA construct from top candidates |
 | `dogneo report` | Generate HTML/Markdown report |
+| `dogneo ui` | Launch interactive Streamlit dashboard |
 | `dogneo check-llm` | Display status of all LLM backends |
 | `dogneo version` | Show version |
 
