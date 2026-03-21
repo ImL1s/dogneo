@@ -124,7 +124,7 @@ def _extract_vep_annotation(csq_str: str) -> dict[str, str]:
         "effect": parts[1],
         "gene": parts[3],
         "transcript_id": parts[6],
-        "hgvs_c": parts.get(10, "") if len(parts) > 10 else "",
+        "hgvs_c": parts[10] if len(parts) > 10 else "",
         "hgvs_p": parts[11] if len(parts) > 11 else "",
     }
 

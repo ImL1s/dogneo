@@ -35,6 +35,7 @@ class NeoantigenCandidate:
     peptide: MutantPeptide
     binding: BindingPrediction
     expression_tpm: float = 0.0
+    wt_binding_nm: float = 0.0  # WT binding affinity for agretopicity (0 = unknown)
     composite_score: float = 0.0
     rank: int = 0
     score_components: dict[str, float] = field(default_factory=dict)
@@ -189,8 +190,13 @@ def rank_candidates(
             candidate.peptide.mut_sequence,
         )
 
-        # Agretopicity (placeholder: would need WT binding prediction)
-        components["agretopicity"] = 0.5  # Default neutral
+        # Agretopicity: compare WT vs mutant binding affinity
+        if candidate.wt_binding_nm > 0:
+            components["agretopicity"] = _score_agretopicity(
+                candidate.wt_binding_nm, candidate.binding.affinity_nm,
+            )
+        else:
+            components["agretopicity"] = 0.5  # Neutral when WT binding unknown
 
         # Caller agreement
         components["caller_agreement"] = _score_caller_agreement(

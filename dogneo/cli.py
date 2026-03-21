@@ -130,15 +130,42 @@ def rank(
     # Step 3: Generate peptides
     click.echo("🔬 Generating mutant peptides...")
     mhci_lens = [int(x) for x in mhci_lengths.split(",")]
-    # (Simplified — would use protein DB in full pipeline)
     click.echo(f"   Peptide lengths: MHC-I {mhci_lens}")
 
-    # Step 4: Ranking (placeholder candidates for direct VCF mode)
+    # NOTE: full peptide generation requires a canine protein FASTA database.
+    # In the full pipeline (Snakemake), this is handled by the alignment steps.
+    from dogneo.core.peptides import ProteinDatabase, generate_peptides
+    from dogneo.core.binding import BindingPrediction
+    from dogneo.core.ranking import build_candidates
+
+    protein_db = ProteinDatabase()
+    # TODO: accept --protein-db CLI flag for standalone usage
+    peptides_by_variant: dict[str, list] = {}
+    predictions_by_peptide: dict[str, list] = {}
+
+    for v in coding:
+        peps = generate_peptides(v, protein_db, lengths=mhci_lens)
+        if peps:
+            peptides_by_variant[v.variant_id] = peps
+
+    if not peptides_by_variant:
+        click.secho(
+            "⚠️  No peptides generated — this likely means no canine protein DB "
+            "was loaded. Use the full Snakemake pipeline (dogneo run) or provide "
+            "a pre-built candidates JSON to the report command.",
+            fg="yellow",
+        )
+
+    # Step 4: Ranking
     click.echo("📊 Scoring and ranking candidates...")
-    # In a full implementation, this would chain through binding prediction
-    # For now, we create candidates from variant data
-    candidates: list[NeoantigenCandidate] = []
-    click.echo(f"   {len(candidates)} candidates ranked")
+    candidates = build_candidates(coding, peptides_by_variant, predictions_by_peptide)
+
+    if allele_list and candidates:
+        ranked = rank_candidates(candidates)
+        click.echo(f"   {len(ranked)} candidates ranked")
+    else:
+        ranked = candidates
+        click.echo(f"   {len(ranked)} candidates (unranked — no alleles or binding data)")
 
     # Step 5: Export
     if "tsv" in format_list:
@@ -183,9 +210,41 @@ def report(input_path: str, fmt: str, output: str, llm_tier: str) -> None:
     with open(input_path) as f:
         data = _json.load(f)
 
-    # Reconstruct candidates (simplified)
-    click.echo(f"📄 Generating {fmt} report...")
-    click.echo(f"   Input: {data.get('metadata', {}).get('total_candidates', '?')} candidates")
+    total = data.get("metadata", {}).get("total_candidates", "?")
+    sample_id = data.get("metadata", {}).get("sample_id", "UNKNOWN")
+    click.echo(f"📄 Generating {fmt} report from {total} candidates...")
+
+    from dogneo.report.generator import ReportGenerator
+    from dogneo.config import LLMConfig
+    from dogneo.llm.router import LLMRouter
+
+    llm_router = None
+    if llm_tier != "none":
+        llm_config = LLMConfig(default_tier=llm_tier)
+        llm_router = LLMRouter(config=llm_config)
+
+    gen = ReportGenerator(llm_router=llm_router)
+    output_path = Path(output)
+
+    # The JSON's "candidates" list already has serialized candidate dicts
+    candidate_dicts = data.get("candidates", [])
+
+    if fmt == "html":
+        gen.generate_html(
+            [], sample_id,
+            parameters=data.get("metadata", {}).get("parameters", {}),
+            alleles=data.get("metadata", {}).get("alleles", []),
+            output_path=output_path,
+            pre_rendered_candidates=candidate_dicts,
+        )
+    else:
+        gen.generate_markdown(
+            [], sample_id,
+            parameters=data.get("metadata", {}).get("parameters", {}),
+            output_path=output_path,
+            pre_rendered_candidates=candidate_dicts,
+        )
+
     click.secho(f"✅ Report written to: {output}", fg="green")
 
 

@@ -142,6 +142,7 @@ class ReportGenerator:
         alleles: list[str] | None = None,
         output_path: str | Path | None = None,
         top_n: int = 50,
+        pre_rendered_candidates: list[dict] | None = None,
     ) -> str:
         """Generate an HTML report from ranked candidates.
 
@@ -159,7 +160,10 @@ class ReportGenerator:
         from jinja2 import Template
 
         # Prepare candidate dicts for template
-        candidate_dicts = [c.to_dict() for c in candidates[:top_n]]
+        if pre_rendered_candidates is not None:
+            candidate_dicts = pre_rendered_candidates[:top_n]
+        else:
+            candidate_dicts = [c.to_dict() for c in candidates[:top_n]]
 
         # Generate AI summary if router available
         ai_summary = ""
@@ -195,6 +199,9 @@ class ReportGenerator:
         candidates: list[NeoantigenCandidate],
         sample_id: str,
         top_n: int = 20,
+        parameters: dict[str, Any] | None = None,
+        output_path: str | Path | None = None,
+        pre_rendered_candidates: list[dict] | None = None,
     ) -> str:
         """Generate a Markdown summary of top candidates.
 
@@ -220,14 +227,25 @@ class ReportGenerator:
             "|---|------|----------|---------|--------|----------|-----|-------|",
         ]
 
-        for c in candidates[:top_n]:
-            d = c.to_dict()
+        if pre_rendered_candidates is not None:
+            candidate_dicts = pre_rendered_candidates[:top_n]
+        else:
+            candidate_dicts = [c.to_dict() for c in candidates[:top_n]]
+
+        for d in candidate_dicts:
             lines.append(
-                f"| {d['rank']} | {d['gene']} | {d['mutation']} | "
-                f"`{d['mutant_peptide']}` | {d['allele']} | "
-                f"{d['binding_affinity_nm']:.1f} | {d['expression_tpm']:.1f} | "
-                f"{d['composite_score']:.4f} |"
+                f"| {d.get('rank', '-')} | {d.get('gene', '')} | {d.get('mutation', '')} | "
+                f"`{d.get('mutant_peptide', '')}` | {d.get('allele', '')} | "
+                f"{float(d.get('binding_affinity_nm', 0)):.1f} | {float(d.get('expression_tpm', 0)):.1f} | "
+                f"{float(d.get('composite_score', 0)):.4f} |"
             )
 
-        lines.extend(["", f"*Total candidates: {len(candidates)}*"])
-        return "\n".join(lines)
+        total = len(pre_rendered_candidates) if pre_rendered_candidates else len(candidates)
+        lines.extend(["", f"*Total candidates: {total}*"])
+        md = "\n".join(lines)
+
+        if output_path:
+            Path(output_path).write_text(md, encoding="utf-8")
+            logger.info("Markdown report written to: %s", output_path)
+
+        return md

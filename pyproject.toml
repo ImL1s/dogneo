@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
-build-backend = "setuptools.backends"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "dogneo"
@@ -25,10 +25,8 @@ classifiers = [
 ]
 
 dependencies = [
-    "pysam>=0.22.0",
     "pandas>=2.0",
     "biopython>=1.82",
-    "pyvcf3>=1.0.3",
     "click>=8.1",
     "jinja2>=3.1",
     "pyyaml>=6.0",
@@ -37,11 +35,14 @@ dependencies = [
 
 [project.optional-dependencies]
 llm = [
-    "langchain-core>=0.2",
     "llama-cpp-python>=0.2.50",
     "openai>=1.10",
     "anthropic>=0.25",
     "google-generativeai>=0.5",
+]
+bio = [
+    "pysam>=0.22.0",
+    "pyvcf3>=1.0.3",
 ]
 pipeline = [
     "snakemake>=8.0",
@@ -52,15 +53,15 @@ dev = [
     "ruff>=0.3",
     "mypy>=1.8",
 ]
-all = ["dogneo[llm,pipeline,dev]"]
+all = ["dogneo[llm,bio,pipeline,dev]"]
 
 [project.scripts]
 dogneo = "dogneo.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/dog-mrna-sos/dogneo"
-Documentation = "https://github.com/dog-mrna-sos/dogneo#readme"
-Issues = "https://github.com/dog-mrna-sos/dogneo/issues"
+Homepage = "https://github.com/ImL1s/dogneo"
+Documentation = "https://github.com/ImL1s/dogneo#readme"
+Issues = "https://github.com/ImL1s/dogneo/issues"
 
 [tool.setuptools.packages.find]
 include = ["dogneo*"]
