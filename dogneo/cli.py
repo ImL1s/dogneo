@@ -121,7 +121,8 @@ def rank(
         mgr = ReferenceDataManager()
         dla_path = mgr.get_dla_alleles_path()
         if dla_path.exists():
-            allele_list = [l.strip() for l in open(dla_path) if l.strip()][:4]
+            allele_list = [l.strip() for l in open(dla_path)
+                          if l.strip() and not l.strip().startswith('#')][:4]
             click.echo(f"   Auto-loaded {len(allele_list)} DLA alleles from bundled data")
 
     # Step 1: Load variants
@@ -374,7 +375,8 @@ def demo(output_dir: str, binding: str) -> None:
     click.echo(f"📂 Using reference: {proteome}")
 
     # Load alleles
-    alleles = [line.strip() for line in open(alleles_path) if line.strip()]
+    alleles = [line.strip() for line in open(alleles_path)
+               if line.strip() and not line.strip().startswith('#')]
     allele_str = ",".join(alleles[:4])  # Use first 4 for demo speed
 
     # Invoke the rank command programmatically
