@@ -104,78 +104,31 @@ def rank(
     click.echo(f"⚠️  {RUO_DISCLAIMER}")
     click.echo(f"🧬 DogNeo v{__version__} — Ranking mode")
 
-    from dogneo.core.variants import load_vcf, filter_variants
-    from dogneo.core.peptides import generate_peptides
-    from dogneo.core.expression import load_expression, annotate_expression
-    from dogneo.core.ranking import NeoantigenCandidate, rank_candidates
-    from dogneo.export.exporters import export_tsv, export_json, export_fasta
+    from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
 
-    outdir = Path(output_dir) / sample_id
-    outdir.mkdir(parents=True, exist_ok=True)
-    format_list = [f.strip().lower() for f in formats.split(",")]
-
-    # Parse alleles — auto-load bundled DLA alleles if none provided
     allele_list = [a.strip() for a in alleles.split(",") if a.strip()] if alleles else []
-    if not allele_list:
-        from dogneo.data.manager import ReferenceDataManager
-        mgr = ReferenceDataManager()
-        dla_path = mgr.get_dla_alleles_path()
-        if dla_path.exists():
-            allele_list = [l.strip() for l in open(dla_path)
-                          if l.strip() and not l.strip().startswith('#')][:4]
-            click.echo(f"   Auto-loaded {len(allele_list)} DLA alleles from bundled data")
 
-    # Step 1: Load variants
+    inp = RankInput(
+        vcf_path=Path(vcf),
+        expression_path=Path(expression) if expression else None,
+        sample_id=sample_id,
+        alleles=allele_list,
+        mhci_lengths=[int(x) for x in mhci_lengths.split(",")],
+        protein_db_path=Path(protein_db) if protein_db else None,
+        binding_tool="none",
+        llm_tier=llm_tier,
+        formats=[f.strip().lower() for f in formats.split(",")],
+    )
+
+    outdir = Path(output_dir)
+
     click.echo("📂 Loading variants from VCF...")
-    variants = load_vcf(vcf)
-    coding = filter_variants(variants)
-    click.echo(f"   {len(variants)} total → {len(coding)} coding variants")
+    result = run_rank_pipeline(inp, outdir)
 
-    # Step 2: Load expression (optional)
-    expr_data = None
-    if expression:
-        click.echo("📊 Loading expression data...")
-        expr_data = load_expression(expression)
-        coding = annotate_expression(coding, expr_data)
+    click.echo(f"   {result.variants_total} total → {result.variants_coding} coding variants")
+    click.echo(f"   {result.peptides_total} peptides generated")
 
-    # Step 3: Generate peptides
-    click.echo("🔬 Generating mutant peptides...")
-    mhci_lens = [int(x) for x in mhci_lengths.split(",")]
-    click.echo(f"   Peptide lengths: MHC-I {mhci_lens}")
-
-    # NOTE: full peptide generation requires a canine protein FASTA database.
-    # In the full pipeline (Snakemake), this is handled by the alignment steps.
-    from dogneo.core.peptides import ProteinDatabase, generate_peptides
-    from dogneo.core.binding import BindingPrediction
-    from dogneo.core.ranking import build_candidates
-
-    pdb = ProteinDatabase()
-
-    # Auto-detect proteome: explicit --protein-db > cached > none
-    effective_protein_db = protein_db
-    if not effective_protein_db:
-        from dogneo.data.manager import ReferenceDataManager
-        mgr = ReferenceDataManager()
-        cached = mgr.get_proteome_path()
-        if cached:
-            effective_protein_db = str(cached)
-            click.echo(f"🧬 Auto-detected cached proteome: {cached.name}")
-
-    if effective_protein_db:
-        click.echo(f"🧬 Loading protein database: {Path(effective_protein_db).name}")
-        pdb.load_fasta(effective_protein_db)
-    peptides_by_variant: dict[str, list] = {}
-    predictions_by_peptide: dict[str, list] = {}
-
-    for v in coding:
-        peps = generate_peptides(v, pdb, lengths=mhci_lens)
-        if peps:
-            peptides_by_variant[v.variant_id] = peps
-
-    total_peptides = sum(len(peps) for peps in peptides_by_variant.values())
-    click.echo(f"   {total_peptides} peptides from {len(peptides_by_variant)} variants")
-
-    if not peptides_by_variant:
+    if result.peptides_total == 0 and result.variants_coding > 0:
         click.secho(
             "⚠️  No peptides generated. Try:\n"
             "   • Run `dogneo setup` to download the CanFam3.1 proteome\n"
@@ -183,69 +136,15 @@ def rank(
             fg="yellow",
         )
 
-    # Step 4: Ranking
-    click.echo("📊 Scoring and ranking candidates...")
+    if result.alleles_used:
+        click.echo(f"   Auto-loaded {len(result.alleles_used)} DLA alleles")
 
-    # If no binding predictions are available (standalone mode),
-    # create candidates with placeholder binding for export.
-    if not predictions_by_peptide and peptides_by_variant:
+    if result.binding_tool_used == "none":
         click.echo("   ℹ️  No binding predictor — creating unscored candidates")
         click.echo("   💡 Run NetMHCpan on the exported FASTA, then re-rank.")
-        candidates_list: list = []
-        for variant in coding:
-            peptides = peptides_by_variant.get(variant.variant_id, [])
-            for peptide in peptides:
-                # Create placeholder binding for each allele
-                for allele in (allele_list or ["DLA-88*unknown"]):
-                    candidates_list.append(NeoantigenCandidate(
-                        variant=variant,
-                        peptide=peptide,
-                        binding=BindingPrediction(
-                            peptide_sequence=peptide.mut_sequence,
-                            allele=allele,
-                            affinity_nm=float('nan'),  # unknown — run NetMHCpan
-                            percentile_rank=float('nan'),
-                            tool="pending",
-                            mhc_class=1,
-                        ),
-                        expression_tpm=variant.expression_tpm,
-                    ))
-        ranked = candidates_list
-        click.echo(f"   {len(ranked)} unscored candidates")
-    else:
-        candidates_list = build_candidates(coding, peptides_by_variant, predictions_by_peptide)
-        if allele_list and candidates_list:
-            ranked = rank_candidates(candidates_list)
-            click.echo(f"   {len(ranked)} candidates ranked")
-        else:
-            ranked = candidates_list
-            click.echo(f"   {len(ranked)} candidates (unranked — no alleles or binding data)")
 
-    # Step 5: Export
-    if "tsv" in format_list:
-        export_tsv(ranked, outdir / "candidates.tsv")
-    if "json" in format_list:
-        export_json(ranked, outdir / "candidates.json", sample_id)
-    if "fasta" in format_list:
-        export_fasta(ranked, outdir / "candidates.fasta")
-    if "html" in format_list:
-        from dogneo.report.generator import ReportGenerator
-        llm_router = None
-        if llm_tier != "none":
-            from dogneo.config import LLMConfig
-            from dogneo.llm.router import LLMRouter
-            llm_config = LLMConfig(default_tier=llm_tier)
-            llm_router = LLMRouter(config=llm_config)
-
-        gen = ReportGenerator(llm_router=llm_router)
-        gen.generate_html(
-            ranked, sample_id,
-            parameters={"VCF": vcf, "Alleles": alleles, "Formats": formats},
-            alleles=allele_list,
-            output_path=outdir / "report.html",
-        )
-
-    click.secho(f"✅ Results written to: {outdir}", fg="green")
+    click.echo(f"   {len(result.candidates)} candidates")
+    click.secho(f"✅ Results written to: {outdir / sample_id}", fg="green")
 
 
 @cli.command()
