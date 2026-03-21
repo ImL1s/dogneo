@@ -114,8 +114,15 @@ def rank(
     outdir.mkdir(parents=True, exist_ok=True)
     format_list = [f.strip().lower() for f in formats.split(",")]
 
-    # Parse alleles
+    # Parse alleles — auto-load bundled DLA alleles if none provided
     allele_list = [a.strip() for a in alleles.split(",") if a.strip()] if alleles else []
+    if not allele_list:
+        from dogneo.data.manager import ReferenceDataManager
+        mgr = ReferenceDataManager()
+        dla_path = mgr.get_dla_alleles_path()
+        if dla_path.exists():
+            allele_list = [l.strip() for l in open(dla_path) if l.strip()][:4]
+            click.echo(f"   Auto-loaded {len(allele_list)} DLA alleles from bundled data")
 
     # Step 1: Load variants
     click.echo("📂 Loading variants from VCF...")
@@ -142,9 +149,20 @@ def rank(
     from dogneo.core.ranking import build_candidates
 
     pdb = ProteinDatabase()
-    if protein_db:
-        click.echo(f"🧬 Loading protein database: {Path(protein_db).name}")
-        pdb.load_fasta(protein_db)
+
+    # Auto-detect proteome: explicit --protein-db > cached > none
+    effective_protein_db = protein_db
+    if not effective_protein_db:
+        from dogneo.data.manager import ReferenceDataManager
+        mgr = ReferenceDataManager()
+        cached = mgr.get_proteome_path()
+        if cached:
+            effective_protein_db = str(cached)
+            click.echo(f"🧬 Auto-detected cached proteome: {cached.name}")
+
+    if effective_protein_db:
+        click.echo(f"🧬 Loading protein database: {Path(effective_protein_db).name}")
+        pdb.load_fasta(effective_protein_db)
     peptides_by_variant: dict[str, list] = {}
     predictions_by_peptide: dict[str, list] = {}
 
@@ -158,9 +176,9 @@ def rank(
 
     if not peptides_by_variant:
         click.secho(
-            "⚠️  No peptides generated — this likely means no canine protein DB "
-            "was loaded. Use --protein-db to provide a FASTA, or use the full "
-            "Snakemake pipeline (dogneo run).",
+            "⚠️  No peptides generated. Try:\n"
+            "   • Run `dogneo setup` to download the CanFam3.1 proteome\n"
+            "   • Or provide --protein-db /path/to/proteome.fa",
             fg="yellow",
         )
 
@@ -281,6 +299,110 @@ def report(input_path: str, fmt: str, output: str, llm_tier: str) -> None:
         )
 
     click.secho(f"✅ Report written to: {output}", fg="green")
+
+
+@cli.command()
+@click.option("--force", is_flag=True, help="Re-download even if cached.")
+def setup(force: bool) -> None:
+    """Download reference data (CanFam3.1 proteome, DLA alleles).
+
+    Downloads the canine proteome from Ensembl FTP and caches it locally.
+    Only needs to be run once. Use --force to re-download.
+    """
+    click.echo(f"🧬 DogNeo v{__version__} — Setting up reference data")
+
+    from dogneo.data.manager import ReferenceDataManager
+
+    mgr = ReferenceDataManager()
+    proteome = mgr.get_proteome_path()
+
+    if proteome and not force:
+        n = mgr._count_proteins(proteome)
+        click.echo(f"✅ Proteome already cached: {proteome} ({n:,} proteins)")
+    else:
+        click.echo("📥 Downloading CanFam3.1 proteome from Ensembl...")
+        path = mgr.setup(force=force)
+        n = mgr._count_proteins(path)
+        click.secho(f"✅ Proteome saved: {path} ({n:,} proteins)", fg="green")
+
+    # DLA alleles (bundled)
+    dla_path = mgr.get_dla_alleles_path()
+    n_alleles = sum(1 for line in open(dla_path) if line.strip())
+    click.echo(f"✅ DLA alleles: bundled ({n_alleles} alleles from IPD-MHC)")
+
+    click.secho("\n✅ Setup complete! Run `dogneo demo` to test the pipeline.", fg="green")
+
+
+@cli.command()
+@click.option("--output-dir", "-o", default="dogneo_demo_results",
+              help="Output directory for demo results.")
+@click.option("--binding", type=click.Choice(["none", "iedb"]),
+              default="none", help="Binding predictor (iedb = free online API).")
+def demo(output_dir: str, binding: str) -> None:
+    """Run a demo pipeline with bundled canine osteosarcoma data.
+
+    Uses built-in demo VCF, expression, and DLA allele data.
+    Proteome must be downloaded first via `dogneo setup`.
+    """
+    click.echo(f"⚠️  {RUO_DISCLAIMER}")
+    click.echo(f"🧬 DogNeo v{__version__} — Running demo pipeline")
+
+    from dogneo.data.manager import ReferenceDataManager
+
+    mgr = ReferenceDataManager()
+    proteome = mgr.get_proteome_path()
+
+    if not proteome:
+        click.secho(
+            "❌ Proteome not found. Run `dogneo setup` first to download "
+            "the CanFam3.1 reference data.",
+            fg="red",
+        )
+        sys.exit(1)
+
+    # Locate bundled demo data
+    demo_dir = Path(__file__).parent.parent / "data" / "demo"
+    vcf_path = demo_dir / "canine_osteosarcoma.vcf"
+    expr_path = demo_dir / "expression.sf"
+    alleles_path = mgr.get_dla_alleles_path()
+
+    if not vcf_path.exists():
+        click.secho("❌ Demo VCF not found. Package may be incomplete.", fg="red")
+        sys.exit(1)
+
+    click.echo(f"📂 Using bundled demo data: {demo_dir}")
+    click.echo(f"📂 Using reference: {proteome}")
+
+    # Load alleles
+    alleles = [line.strip() for line in open(alleles_path) if line.strip()]
+    allele_str = ",".join(alleles[:4])  # Use first 4 for demo speed
+
+    # Invoke the rank command programmatically
+    from click.testing import CliRunner
+    runner = CliRunner()
+    rank_args = [
+        "rank",
+        "--vcf", str(vcf_path),
+        "--expression", str(expr_path),
+        "--sample-id", "CANINE_OSA_DEMO",
+        "--output-dir", output_dir,
+        "--alleles", allele_str,
+        "--protein-db", str(proteome),
+        "--formats", "tsv,json,fasta",
+    ]
+
+    result = runner.invoke(cli, rank_args, catch_exceptions=False)
+    click.echo(result.output)
+
+    if result.exit_code != 0:
+        click.secho("❌ Demo pipeline failed.", fg="red")
+        sys.exit(result.exit_code)
+
+    out_path = Path(output_dir) / "CANINE_OSA_DEMO"
+    click.secho(f"\n✅ Demo complete! Results: {out_path}", fg="green")
+    click.echo("   📄 candidates.tsv  — Tab-separated candidates")
+    click.echo("   📄 candidates.json — Structured JSON with metadata")
+    click.echo("   📄 candidates.fasta — Peptide sequences for wet lab")
 
 
 @cli.command("check-llm")

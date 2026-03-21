@@ -32,37 +32,54 @@ Tumor/Normal DNA → Variant Calling → Peptide Generation → DLA Binding → 
 ## Installation
 
 ```bash
-# Basic install
+# Basic install (includes BioPython, Click, Pandas, requests)
 pip install -e .
+
+# With bioinformatics extras (pysam, pyvcf3)
+pip install -e ".[bio]"
 
 # With LLM support
 pip install -e ".[llm]"
-
-# With pipeline (Snakemake)
-pip install -e ".[pipeline]"
 
 # Everything
 pip install -e ".[all]"
 ```
 
-## Quick Start
+## Quick Start (3 commands)
 
 ```bash
-# Run full pipeline
-dogneo run --config pipeline_config.yaml
+# 1. Install
+pip install -e .
 
-# Rank from existing VCF
+# 2. Download reference data (one-time, ~15 MB)
+dogneo setup
+
+# 3. Run demo — zero config needed
+dogneo demo
+```
+
+That's it! The demo runs a full pipeline on bundled canine osteosarcoma data
+(8 published mutations from TP53, BRAF, KRAS, PIK3CA, PTEN) and generates
+TSV, JSON, and FASTA output.
+
+### Advanced Usage
+
+```bash
+# Rank from your own VCF (auto-detects cached proteome + bundled DLA alleles)
+dogneo rank --vcf my_somatic_variants.vcf
+
+# With specific alleles and binding prediction
 dogneo rank \
   --vcf somatic_annotated.vcf \
   --expression salmon_quant.sf \
   --alleles "DLA-88*001:01,DLA-88*501:01" \
-  --output candidates.tsv
+  --output-dir results
 
-# Generate report
+# Run full Snakemake pipeline
+dogneo run --config pipeline_config.yaml
+
+# Generate HTML report from candidates
 dogneo report --input candidates.json --output report.html
-
-# Export for wet lab
-dogneo export --input candidates.json --format fasta --output peptides.fa
 ```
 
 ## LLM Backend Configuration
