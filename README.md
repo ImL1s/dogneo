@@ -9,7 +9,7 @@ From somatic variants to ranked vaccine candidates — purpose-built for dogs.
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![Tests](https://img.shields.io/badge/tests-137_passed-brightgreen.svg)](#-verification)
-[![pip](https://img.shields.io/badge/pip_install-dogneo-orange.svg)](#-installation)
+[![install](https://img.shields.io/badge/install-GitHub-orange.svg)](#-installation)
 
 [Quick Start](#-quick-start) · [Usage](#-usage) · [LLM Config](#-llm-backend-configuration) · [Architecture](#-pipeline-architecture) · [License](#-license)
 
@@ -46,9 +46,9 @@ Tumor/Normal DNA ──→ Variant Calling ──→ Peptide Generation ──�
 ## 🚀 Quick Start
 
 ```bash
-pip install dogneo               # 1. Install
-dogneo setup                     # 2. Download CanFam3.1 proteome (~15 MB, one-time)
-dogneo demo                      # 3. Run demo pipeline ✨
+pip install git+https://github.com/ImL1s/dogneo.git   # 1. Install
+dogneo setup                                           # 2. Download reference data (~15 MB)
+dogneo demo                                            # 3. Run demo pipeline ✨
 ```
 
 That's it. The demo runs a full pipeline on **bundled canine osteosarcoma data** (8 published mutations across TP53, BRAF, KRAS, PIK3CA, PTEN) and generates ranked candidates in TSV, JSON, and FASTA formats.
@@ -80,35 +80,28 @@ That's it. The demo runs a full pipeline on **bundled canine osteosarcoma data**
 |------|---------|-------|-------|
 | **Python** | ≥ 3.10 | `python --version` | Required |
 | **pip** | latest | `pip --version` | Included with Python |
-| **git** | any | `git --version` | Only for source install |
+| **git** | any | `git --version` | Required |
 
-### pip (Recommended)
-
-```bash
-pip install dogneo
-```
-
-### Extras
+### Install from GitHub (Recommended)
 
 ```bash
-pip install "dogneo[bio]"     # + pysam, pyvcf3
-pip install "dogneo[llm]"     # + openai, anthropic, google-generativeai
-pip install "dogneo[all]"     # Everything
+pip install git+https://github.com/ImL1s/dogneo.git
 ```
 
-### Source
+### With extras
+
+```bash
+pip install "dogneo[bio] @ git+https://github.com/ImL1s/dogneo.git"     # + pysam, pyvcf3
+pip install "dogneo[llm] @ git+https://github.com/ImL1s/dogneo.git"     # + openai, anthropic
+pip install "dogneo[all] @ git+https://github.com/ImL1s/dogneo.git"     # Everything
+```
+
+### From source (development)
 
 ```bash
 git clone https://github.com/ImL1s/dogneo.git
 cd dogneo
 pip install -e ".[all]"
-```
-
-### Docker
-
-```bash
-docker pull iml1s/dogneo:latest
-docker run --rm iml1s/dogneo dogneo demo
 ```
 
 ### Reference Data (~15 MB, one-time)
