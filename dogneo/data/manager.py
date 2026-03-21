@@ -27,8 +27,8 @@ PROTEOME_FILENAME = "CanFam3.1.pep.all.fa"
 PROTEOME_GZ_FILENAME = "CanFam3.1.pep.all.fa.gz"
 
 # Bundled DLA alleles shipped with the package
-_PACKAGE_DIR = Path(__file__).parent.parent  # dogneo/
-_BUNDLED_DLA_ALLELES = _PACKAGE_DIR.parent / "data" / "demo" / "dla_alleles.txt"
+_PACKAGE_DATA_DIR = Path(__file__).parent  # dogneo/data/
+_BUNDLED_DLA_ALLELES = _PACKAGE_DATA_DIR / "demo" / "dla_alleles.txt"
 
 
 class ReferenceDataManager:

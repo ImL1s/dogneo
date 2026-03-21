@@ -104,7 +104,7 @@ class TestDemoCommand:
         cache.mkdir()
 
         # Use real demo data from the project
-        demo_dir = Path(__file__).parent.parent / "data" / "demo"
+        demo_dir = Path(__file__).parent.parent / "dogneo" / "data" / "demo"
         proteome = Path(__file__).parent.parent / "data" / "reference" / "CanFam3.1.pep.all.fa"
 
         if not proteome.exists():

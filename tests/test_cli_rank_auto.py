@@ -28,7 +28,7 @@ class TestRankAutoDetection:
             "MKTAYIAKQRQISFVKSHFSRQ\n"
         )
 
-        demo_dir = Path(__file__).parent.parent / "data" / "demo"
+        demo_dir = Path(__file__).parent.parent / "dogneo" / "data" / "demo"
         vcf_path = demo_dir / "canine_osteosarcoma.vcf"
 
         if not vcf_path.exists():
@@ -49,7 +49,7 @@ class TestRankAutoDetection:
 
     def test_rank_auto_alleles_from_bundled(self, tmp_path):
         """rank without --alleles uses bundled DLA alleles."""
-        demo_dir = Path(__file__).parent.parent / "data" / "demo"
+        demo_dir = Path(__file__).parent.parent / "dogneo" / "data" / "demo"
         vcf_path = demo_dir / "canine_osteosarcoma.vcf"
         proteome = Path(__file__).parent.parent / "data" / "reference" / "CanFam3.1.pep.all.fa"
 
@@ -70,7 +70,7 @@ class TestRankAutoDetection:
 
     def test_rank_no_proteome_no_cache_warns(self, tmp_path):
         """rank without proteome nor cache shows helpful message."""
-        demo_dir = Path(__file__).parent.parent / "data" / "demo"
+        demo_dir = Path(__file__).parent.parent / "dogneo" / "data" / "demo"
         vcf_path = demo_dir / "canine_osteosarcoma.vcf"
 
         if not vcf_path.exists():
@@ -90,7 +90,7 @@ class TestRankAutoDetection:
 
     def test_rank_explicit_protein_db_overrides_cache(self, tmp_path):
         """Explicit --protein-db still works and takes precedence."""
-        demo_dir = Path(__file__).parent.parent / "data" / "demo"
+        demo_dir = Path(__file__).parent.parent / "dogneo" / "data" / "demo"
         vcf_path = demo_dir / "canine_osteosarcoma.vcf"
         proteome = Path(__file__).parent.parent / "data" / "reference" / "CanFam3.1.pep.all.fa"
 

@@ -1,0 +1,23 @@
+##fileformat=VCFv4.2
+##reference=CanFam3.1
+##source=DogNeo_demo_based_on_published_mutations
+##NOTE=Coordinates are approximate; for pipeline demonstration purposes only. Do not cite as real CanFam3.1 loci.
+##INFO=<ID=ANN,Number=.,Type=String,Description="SnpEff annotation: Allele|Annotation|Impact|Gene_Name|Gene_ID|Feature_Type|Feature_ID|Transcript_BioType|Rank|HGVS.c|HGVS.p|cDNA.pos|CDS.pos|AA.pos|Distance|ERRORS">
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Read depth">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele frequency">
+##FILTER=<ID=PASS,Description="All filters passed">
+##contig=<ID=5,length=91628006>
+##contig=<ID=16,length=62234451>
+##contig=<ID=26,length=40106637>
+##contig=<ID=27,length=45876710>
+##contig=<ID=34,length=42860381>
+##SAMPLE=<ID=CANINE_OSA_001,Description="Canine Osteosarcoma Sample - Golden Retriever, 8yr, appendicular OSA">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	CANINE_OSA_001
+5	32564000	.	C	T	.	PASS	DP=120;AF=0.35;ANN=T|missense_variant|MODERATE|TP53|ENSCAFG00000016714|transcript|ENSCAFT00000026465|protein_coding|7/10|c.817G>A|p.Glu273Lys|1042/2591|817/1146|273/381||	GT:DP:AF	0/1:120:0.35
+5	32563850	.	C	T	.	PASS	DP=95;AF=0.28;ANN=T|missense_variant|MODERATE|TP53|ENSCAFG00000016714|transcript|ENSCAFT00000026465|protein_coding|8/10|c.844G>A|p.Glu282Lys|1069/2591|844/1146|282/381||	GT:DP:AF	0/1:95:0.28
+16	8295000	.	A	T	.	PASS	DP=85;AF=0.42;ANN=T|missense_variant|MODERATE|BRAF|ENSCAFG00000003907|transcript|ENSCAFT00000006306|protein_coding|15/18|c.1799T>A|p.Val600Glu|2050/4571|1799/2286|600/761||	GT:DP:AF	0/1:85:0.42
+27	22265000	.	C	T	.	PASS	DP=110;AF=0.32;ANN=T|missense_variant|MODERATE|KRAS|ENSCAFG00000011428|transcript|ENSCAFT00000010525|protein_coding|2/6|c.298G>A|p.Gly100Arg|438/1088|298/849|100/282||	GT:DP:AF	0/1:110:0.32
+34	12660000	.	C	T	.	PASS	DP=78;AF=0.22;ANN=T|missense_variant|MODERATE|PIK3CA|ENSCAFG00000011212|transcript|ENSCAFT00000017863|protein_coding|10/21|c.1633G>A|p.Glu545Lys|1806/5067|1633/2937|545/978||	GT:DP:AF	0/1:78:0.22
+26	37872000	.	T	C	.	PASS	DP=60;AF=0.18;ANN=C|missense_variant|MODERATE|PTEN|ENSCAFG00000015670|transcript|ENSCAFT00000024821|protein_coding|5/9|c.388A>G|p.Asp130Gly|512/4620|388/1116|130/371||	GT:DP:AF	0/1:60:0.18
+5	32565000	.	G	A	.	PASS	DP=45;AF=0.08;ANN=A|synonymous_variant|LOW|TP53|ENSCAFG00000016714|transcript|ENSCAFT00000026465|protein_coding|3/10|c.99C>T|p.Pro33Pro|324/2591|99/1146|33/381||	GT:DP:AF	0/1:45:0.08
+34	12670000	.	A	G	.	rejected	DP=8;AF=0.50;ANN=G|missense_variant|MODERATE|PIK3CA|ENSCAFG00000011212|transcript|ENSCAFT00000017863|protein_coding|5/21|c.100T>C|p.Gly34Ala|273/5067|100/2937|34/978||	GT:DP:AF	0/1:8:0.50

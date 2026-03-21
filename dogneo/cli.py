@@ -361,8 +361,9 @@ def demo(output_dir: str, binding: str) -> None:
         )
         sys.exit(1)
 
-    # Locate bundled demo data
-    demo_dir = Path(__file__).parent.parent / "data" / "demo"
+    # Locate bundled demo data (inside the package: dogneo/data/demo/)
+    import dogneo.data as _data_pkg
+    demo_dir = Path(_data_pkg.__file__).parent / "demo"
     vcf_path = demo_dir / "canine_osteosarcoma.vcf"
     expr_path = demo_dir / "expression.sf"
     alleles_path = mgr.get_dla_alleles_path()

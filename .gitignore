@@ -41,6 +41,7 @@ logs/
 *.vcf
 *.vcf.gz
 !data/demo/*.vcf
+!dogneo/data/demo/*.vcf
 *.fastq
 *.fastq.gz
 *.fq

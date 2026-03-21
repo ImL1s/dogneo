@@ -1,0 +1,9 @@
+# Real DLA-88 alleles from IPD-MHC database
+# Common alleles found in Golden Retrievers (osteosarcoma-prone breed)
+# Reference: Kennedy et al. (2007) Tissue Antigens; Venkataraman et al. (2007) Immunogenetics
+DLA-88*001:01
+DLA-88*002:01
+DLA-88*007:01
+DLA-88*005:01
+DLA-88*008:01
+DLA-88*013:01
