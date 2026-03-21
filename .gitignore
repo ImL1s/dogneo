@@ -54,3 +54,4 @@ logs/
 # LLM models (large files)
 models/*.gguf
 models/*.bin
+.venv/

@@ -1,0 +1,18 @@
+##fileformat=VCFv4.2
+##source=DogNeo_synthetic_test_data
+##reference=CanFam3.1
+##INFO=<ID=ANN,Number=.,Type=String,Description="SnpEff functional annotations">
+##INFO=<ID=CSQ,Number=.,Type=String,Description="VEP Consequence annotations">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths">
+##FORMAT=<ID=AF,Number=A,Type=Float,Description="Allele fractions">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read depth">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	NORMAL	TUMOR
+chr1	15000100	.	G	A	250	PASS	ANN=A|missense_variant|MODERATE|TP53|ENSCAFG00000008228|transcript|ENSCAFT00000013077|protein_coding|7/11|c.733G>A|p.Val245Ile|1001|733|245/391||	GT:AD:AF:DP	0/0:50,0:0.0:50	0/1:30,20:0.40:50
+chr5	32500200	.	T	C	180	PASS	ANN=C|missense_variant|MODERATE|BRAF|ENSCAFG00000003456|transcript|ENSCAFT00000005678|protein_coding|15/18|c.1799T>C|p.Val600Ala|2100|1799|600/766||	GT:AD:AF:DP	0/0:60,0:0.0:60	0/1:25,15:0.375:40
+chr7	8200300	.	C	T	300	PASS	ANN=T|missense_variant|MODERATE|PIK3CA|ENSCAFG00000001234|transcript|ENSCAFT00000002345|protein_coding|9/20|c.3140C>T|p.His1047Tyr|4200|3140|1047/1068||	GT:AD:AF:DP	0/0:45,0:0.0:45	0/1:20,30:0.60:50
+chr2	22000400	.	A	G	120	PASS	ANN=G|synonymous_variant|LOW|CDH1|ENSCAFG00000005555|transcript|ENSCAFT00000006666|protein_coding|4/16|c.600A>G|p.Arg200=|800|600|200/882||	GT:AD:AF:DP	0/0:40,0:0.0:40	0/1:25,15:0.375:40
+chr3	44000500	.	ACGT	A	90	PASS	ANN=A|frameshift_variant|HIGH|PTEN|ENSCAFG00000009999|transcript|ENSCAFT00000011111|protein_coding|5/9|c.388_390delCGT|p.Arg130del|500|388|130/403||	GT:AD:AF:DP	0/0:55,0:0.0:55	0/1:35,15:0.30:50
+chr1	15000600	.	A	T	200	PASS	CSQ=T|missense_variant|MODERATE|KRAS||transcript|ENSCAFT00000077777||||c.182A>T|p.Gln61Leu||	GT:AD:AF:DP	0/0:48,0:0.0:48	0/1:22,18:0.45:40
+chr4	50000700	.	G	C	60	LowQual	ANN=C|missense_variant|MODERATE|BRCA1|ENSCAFG00000004444|transcript|ENSCAFT00000007777|protein_coding|10/23|c.5266G>C|p.Gly1756Arg|6200|5266|1756/1863||	GT:AD:AF:DP	0/0:30,0:0.0:30	0/1:15,5:0.25:20
+chr6	60000800	.	C	A	40	PASS	ANN=A|missense_variant|MODERATE|EGFR|ENSCAFG00000003333|transcript|ENSCAFT00000004444|protein_coding|19/28|c.2573C>A|p.Thr858Asn|3400|2573|858/1210||	GT:AD:AF:DP	0/0:20,0:0.0:20	0/1:18,2:0.01:20
