@@ -80,12 +80,25 @@ class ProteinDatabase:
             self._by_transcript[transcript_id] = seq_str
 
             # Try to extract gene name from description
+            # Supports: gene_symbol:SYMBOL (Ensembl, preferred),
+            #           gene=SYMBOL, gene:SYMBOL (simple formats)
             desc = record.description
+            gene_name = None
+            gene_fallback = None
             for part in desc.split():
-                if part.startswith("gene=") or part.startswith("gene:"):
-                    gene = part.split("=", 1)[-1].split(":", 1)[-1]
-                    self._by_gene[gene] = seq_str
-                    break
+                if part.startswith("gene_symbol:"):
+                    gene_name = part.split(":", 1)[1]
+                    break  # gene_symbol is authoritative, stop
+                if part.startswith("gene="):
+                    gene_fallback = part.split("=", 1)[1]
+                elif part.startswith("gene:") and not part.startswith("gene_biotype:"):
+                    val = part.split(":", 1)[1]
+                    # Skip Ensembl gene IDs (e.g. ENSCAFG00000016714.4)
+                    if not val.startswith("ENS"):
+                        gene_fallback = val
+            gene_name = gene_name or gene_fallback
+            if gene_name and gene_name not in self._by_gene:
+                self._by_gene[gene_name] = seq_str
             count += 1
 
         logger.info("Loaded %d protein sequences from %s", count, path.name)
