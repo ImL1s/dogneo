@@ -290,7 +290,7 @@ dogneo/
 | Resource | Source | Notes |
 |----------|--------|-------|
 | Canine proteome | [Ensembl](https://ftp.ensembl.org/) CanFam3.1 | Auto-downloaded via `dogneo setup` (~15 MB) |
-| DLA alleles | [IPD-MHC](https://www.ebi.ac.uk/ipd/mhc/) | 9 DLA-88 Class I alleles, bundled |
+| DLA alleles | [IPD-MHC](https://www.ebi.ac.uk/ipd/mhc/) | 6 DLA-88 Class I alleles, bundled |
 | DLA typing | KPR ([paper](https://doi.org/10.1016/j.isci.2023.105996)) | RNA-seq based MHC-I genotyping |
 | Canine genome | CanFam3.1, GSD_1.0, UMICH_Zoey_3.1 | Multiple assemblies supported |
 
