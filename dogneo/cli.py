@@ -191,6 +191,36 @@ def rerank(
 
 
 @cli.command()
+@click.option("--port", "-p", default=8501, help="Port for Streamlit server.")
+@click.option("--demo", is_flag=True, help="Pre-load demo results on launch.")
+def ui(port: int, demo: bool) -> None:
+    """Launch interactive Streamlit dashboard."""
+    import subprocess
+
+    app_path = Path(__file__).parent / "ui" / "app.py"
+    if not app_path.exists():
+        click.secho("❌ UI module not found.", fg="red")
+        sys.exit(1)
+
+    click.echo(f"🧬 DogNeo v{__version__} — Launching dashboard on port {port}")
+    click.echo(f"   Open: http://localhost:{port}")
+
+    cmd = [
+        sys.executable, "-m", "streamlit", "run", str(app_path),
+        "--server.port", str(port),
+        "--server.headless", "false",
+        "--browser.gatherUsageStats", "false",
+    ]
+    if demo:
+        cmd.extend(["--", "--demo"])
+
+    try:
+        subprocess.run(cmd)
+    except KeyboardInterrupt:
+        click.echo("\n👋 Dashboard stopped.")
+
+
+@cli.command()
 @click.option("--input", "-i", "input_path", required=True,
               type=click.Path(exists=True), help="Candidates JSON file.")
 @click.option("--format", "-f", "fmt", default="html",
