@@ -148,6 +148,49 @@ def rank(
 
 
 @cli.command()
+@click.option("--candidates", "-c", required=True, type=click.Path(exists=True),
+              help="Candidates JSON from a previous dogneo rank run.")
+@click.option("--binding", "-b", required=True, type=click.Path(exists=True),
+              help="External binding results (NetMHCpan TSV, MHCflurry CSV, or generic TSV).")
+@click.option("--output-dir", "-o", default="reranked", help="Output directory.")
+@click.option("--format", "binding_format",
+              type=click.Choice(["auto", "netmhcpan", "mhcflurry", "tsv"]),
+              default="auto", help="Binding results format.")
+@click.option("--formats", default="tsv,json",
+              help="Output formats: tsv,json,fasta.")
+def rerank(
+    candidates: str,
+    binding: str,
+    output_dir: str,
+    binding_format: str,
+    formats: str,
+) -> None:
+    """Re-rank candidates with external binding predictions.
+
+    Import binding results from NetMHCpan, MHCflurry, or a generic TSV,
+    merge with existing candidates, and re-score.
+    """
+    click.echo(f"⚠️  {RUO_DISCLAIMER}")
+    click.echo(f"🧬 DogNeo v{__version__} — Re-rank mode")
+
+    from dogneo.app.rerank_pipeline import RerankInput, run_rerank_pipeline
+
+    inp = RerankInput(
+        candidates_path=Path(candidates),
+        binding_path=Path(binding),
+        binding_format=binding_format,
+        formats=[f.strip().lower() for f in formats.split(",")],
+    )
+
+    outdir = Path(output_dir)
+    result = run_rerank_pipeline(inp, outdir)
+
+    click.echo(f"   Re-ranked {len(result.candidates)} candidates")
+    click.echo(f"   {result.binding_matched} matched, {result.binding_unmatched} unmatched")
+    click.secho(f"✅ Results written to: {outdir}", fg="green")
+
+
+@cli.command()
 @click.option("--input", "-i", "input_path", required=True,
               type=click.Path(exists=True), help="Candidates JSON file.")
 @click.option("--format", "-f", "fmt", default="html",
