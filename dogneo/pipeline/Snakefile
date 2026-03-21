@@ -1,0 +1,251 @@
+"""
+Dog mRNA SOS — Canine Neoantigen Prioritization Pipeline
+=========================================================
+Snakemake workflow: Tumor/Normal DNA + Tumor RNA → Ranked Neoantigens
+
+FOR RESEARCH USE ONLY — NOT FOR CLINICAL OR VETERINARY DIAGNOSTIC USE.
+"""
+
+import os
+
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+
+configfile: "config.yaml"
+
+SAMPLE = config["sample_id"]
+OUTDIR = config.get("output_dir", "results")
+THREADS = config.get("threads", 4)
+
+# Reference
+REF_FASTA = config["reference"]["genome_fasta"]
+REF_GTF = config["reference"]["annotation_gtf"]
+STAR_IDX = config["reference"]["star_index_dir"]
+BWA_IDX = config["reference"]["bwa_index_prefix"]
+SNPEFF_DB = config["reference"].get("snpeff_db", "CanFam3.1.105")
+
+# Tools
+TOOLS = config.get("tools", {})
+
+# Inputs
+TUMOR_DNA_R1, TUMOR_DNA_R2 = config["tumor_dna_fastq"]
+NORMAL_DNA_R1, NORMAL_DNA_R2 = config["normal_dna_fastq"]
+TUMOR_RNA_R1, TUMOR_RNA_R2 = config["tumor_rna_fastq"]
+
+# Peptide params
+MHCI_LENGTHS = config.get("mhci_peptide_lengths", [8, 9, 10, 11])
+MHCII_LENGTHS = config.get("mhcii_peptide_lengths", [15, 16, 17])
+
+# DLA alleles (manual or TBD by typing step)
+DLA_ALLELES = config.get("dla_alleles", [])
+
+
+# ---------------------------------------------------------------------------
+# Target Rule
+# ---------------------------------------------------------------------------
+
+rule all:
+    input:
+        f"{OUTDIR}/{SAMPLE}/report.html",
+        f"{OUTDIR}/{SAMPLE}/candidates.tsv",
+        f"{OUTDIR}/{SAMPLE}/candidates.json",
+        f"{OUTDIR}/{SAMPLE}/candidates.fasta",
+
+
+# ---------------------------------------------------------------------------
+# Step 1: Align Tumor & Normal DNA (BWA-MEM)
+# ---------------------------------------------------------------------------
+
+rule align_tumor_dna:
+    input:
+        r1=TUMOR_DNA_R1,
+        r2=TUMOR_DNA_R2,
+    output:
+        bam=f"{OUTDIR}/{SAMPLE}/alignments/tumor_dna.sorted.bam",
+        bai=f"{OUTDIR}/{SAMPLE}/alignments/tumor_dna.sorted.bam.bai",
+    threads: THREADS
+    params:
+        rg=f"@RG\\tID:{SAMPLE}_tumor\\tSM:{SAMPLE}_tumor\\tPL:ILLUMINA",
+    shell:
+        """
+        {TOOLS.get('bwa', 'bwa')} mem -t {threads} -R '{params.rg}' \
+            {BWA_IDX} {input.r1} {input.r2} | \
+        {TOOLS.get('samtools', 'samtools')} sort -@ {threads} -o {output.bam}
+        {TOOLS.get('samtools', 'samtools')} index {output.bam}
+        """
+
+
+rule align_normal_dna:
+    input:
+        r1=NORMAL_DNA_R1,
+        r2=NORMAL_DNA_R2,
+    output:
+        bam=f"{OUTDIR}/{SAMPLE}/alignments/normal_dna.sorted.bam",
+        bai=f"{OUTDIR}/{SAMPLE}/alignments/normal_dna.sorted.bam.bai",
+    threads: THREADS
+    params:
+        rg=f"@RG\\tID:{SAMPLE}_normal\\tSM:{SAMPLE}_normal\\tPL:ILLUMINA",
+    shell:
+        """
+        {TOOLS.get('bwa', 'bwa')} mem -t {threads} -R '{params.rg}' \
+            {BWA_IDX} {input.r1} {input.r2} | \
+        {TOOLS.get('samtools', 'samtools')} sort -@ {threads} -o {output.bam}
+        {TOOLS.get('samtools', 'samtools')} index {output.bam}
+        """
+
+
+# ---------------------------------------------------------------------------
+# Step 2: Align Tumor RNA (STAR)
+# ---------------------------------------------------------------------------
+
+rule align_rna:
+    input:
+        r1=TUMOR_RNA_R1,
+        r2=TUMOR_RNA_R2,
+    output:
+        bam=f"{OUTDIR}/{SAMPLE}/alignments/tumor_rna.sorted.bam",
+    threads: THREADS
+    params:
+        prefix=f"{OUTDIR}/{SAMPLE}/alignments/star_",
+    shell:
+        """
+        {TOOLS.get('star', 'STAR')} --runThreadN {threads} \
+            --genomeDir {STAR_IDX} \
+            --readFilesIn {input.r1} {input.r2} \
+            --readFilesCommand zcat \
+            --outSAMtype BAM SortedByCoordinate \
+            --outFileNamePrefix {params.prefix} \
+            --twopassMode Basic \
+            --outSAMstrandField intronMotif
+        mv {params.prefix}Aligned.sortedByCoord.out.bam {output.bam}
+        {TOOLS.get('samtools', 'samtools')} index {output.bam}
+        """
+
+
+# ---------------------------------------------------------------------------
+# Step 3: GATK Preprocessing
+# ---------------------------------------------------------------------------
+
+rule mark_duplicates:
+    input:
+        tumor=rules.align_tumor_dna.output.bam,
+        normal=rules.align_normal_dna.output.bam,
+    output:
+        tumor=f"{OUTDIR}/{SAMPLE}/preprocessed/tumor_dedup.bam",
+        normal=f"{OUTDIR}/{SAMPLE}/preprocessed/normal_dedup.bam",
+    shell:
+        """
+        {TOOLS.get('gatk', 'gatk')} MarkDuplicates \
+            -I {input.tumor} -O {output.tumor} \
+            -M {output.tumor}.metrics --REMOVE_DUPLICATES false
+        {TOOLS.get('samtools', 'samtools')} index {output.tumor}
+
+        {TOOLS.get('gatk', 'gatk')} MarkDuplicates \
+            -I {input.normal} -O {output.normal} \
+            -M {output.normal}.metrics --REMOVE_DUPLICATES false
+        {TOOLS.get('samtools', 'samtools')} index {output.normal}
+        """
+
+
+# ---------------------------------------------------------------------------
+# Step 4: Variant Calling (Mutect2)
+# ---------------------------------------------------------------------------
+
+rule call_variants_mutect2:
+    input:
+        tumor=rules.mark_duplicates.output.tumor,
+        normal=rules.mark_duplicates.output.normal,
+    output:
+        vcf=f"{OUTDIR}/{SAMPLE}/variants/mutect2.vcf.gz",
+        filtered=f"{OUTDIR}/{SAMPLE}/variants/mutect2.filtered.vcf.gz",
+    shell:
+        """
+        {TOOLS.get('gatk', 'gatk')} Mutect2 \
+            -R {REF_FASTA} \
+            -I {input.tumor} \
+            -I {input.normal} \
+            -normal {SAMPLE}_normal \
+            -O {output.vcf}
+
+        {TOOLS.get('gatk', 'gatk')} FilterMutectCalls \
+            -R {REF_FASTA} \
+            -V {output.vcf} \
+            -O {output.filtered}
+        """
+
+
+# ---------------------------------------------------------------------------
+# Step 5: Variant Annotation (SnpEff)
+# ---------------------------------------------------------------------------
+
+rule annotate_variants:
+    input:
+        vcf=rules.call_variants_mutect2.output.filtered,
+    output:
+        vcf=f"{OUTDIR}/{SAMPLE}/variants/annotated.vcf",
+    shell:
+        """
+        {TOOLS.get('snpeff', 'snpEff')} ann \
+            -noStats {SNPEFF_DB} \
+            {input.vcf} > {output.vcf}
+        """
+
+
+# ---------------------------------------------------------------------------
+# Step 6: Expression Quantification (Salmon)
+# ---------------------------------------------------------------------------
+
+rule quantify_expression:
+    input:
+        r1=TUMOR_RNA_R1,
+        r2=TUMOR_RNA_R2,
+    output:
+        quant=f"{OUTDIR}/{SAMPLE}/expression/quant.sf",
+    threads: THREADS
+    params:
+        outdir=f"{OUTDIR}/{SAMPLE}/expression",
+    shell:
+        """
+        {TOOLS.get('salmon', 'salmon')} quant \
+            -i {STAR_IDX}_salmon \
+            -l A \
+            -1 {input.r1} -2 {input.r2} \
+            -p {threads} \
+            --validateMappings \
+            -o {params.outdir}
+        """
+
+
+# ---------------------------------------------------------------------------
+# Step 7-10: Python Integration Steps (Peptides, DLA, Binding, Ranking)
+# ---------------------------------------------------------------------------
+
+rule run_neoantigen_pipeline:
+    """Run the DogNeo Python pipeline for peptide generation,
+    DLA typing, binding prediction, and ranking."""
+    input:
+        vcf=rules.annotate_variants.output.vcf,
+        quant=rules.quantify_expression.output.quant,
+        rna_bam=rules.align_rna.output.bam,
+    output:
+        report=f"{OUTDIR}/{SAMPLE}/report.html",
+        tsv=f"{OUTDIR}/{SAMPLE}/candidates.tsv",
+        json=f"{OUTDIR}/{SAMPLE}/candidates.json",
+        fasta=f"{OUTDIR}/{SAMPLE}/candidates.fasta",
+    params:
+        alleles=",".join(DLA_ALLELES) if DLA_ALLELES else "",
+        mhci_lengths=",".join(str(l) for l in MHCI_LENGTHS),
+        mhcii_lengths=",".join(str(l) for l in MHCII_LENGTHS),
+    shell:
+        """
+        dogneo rank \
+            --vcf {input.vcf} \
+            --expression {input.quant} \
+            --sample-id {SAMPLE} \
+            --output-dir $(dirname {output.report}) \
+            --alleles "{params.alleles}" \
+            --mhci-lengths {params.mhci_lengths} \
+            --mhcii-lengths {params.mhcii_lengths} \
+            --formats tsv,json,fasta,html
+        """

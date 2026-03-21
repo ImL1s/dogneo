@@ -1,0 +1,82 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends"
+
+[project]
+name = "dogneo"
+version = "0.1.0"
+description = "Canine tumor neoantigen prioritization pipeline (Research Use Only)"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Dog mRNA SOS Contributors"}
+]
+keywords = ["neoantigen", "canine", "oncology", "bioinformatics", "DLA", "immunotherapy"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+
+dependencies = [
+    "pysam>=0.22.0",
+    "pandas>=2.0",
+    "biopython>=1.82",
+    "pyvcf3>=1.0.3",
+    "click>=8.1",
+    "jinja2>=3.1",
+    "pyyaml>=6.0",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+llm = [
+    "langchain-core>=0.2",
+    "llama-cpp-python>=0.2.50",
+    "openai>=1.10",
+    "anthropic>=0.25",
+    "google-generativeai>=0.5",
+]
+pipeline = [
+    "snakemake>=8.0",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=4.1",
+    "ruff>=0.3",
+    "mypy>=1.8",
+]
+all = ["dogneo[llm,pipeline,dev]"]
+
+[project.scripts]
+dogneo = "dogneo.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/dog-mrna-sos/dogneo"
+Documentation = "https://github.com/dog-mrna-sos/dogneo#readme"
+Issues = "https://github.com/dog-mrna-sos/dogneo/issues"
+
+[tool.setuptools.packages.find]
+include = ["dogneo*"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true

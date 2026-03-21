@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Pipeline outputs
+results/
+logs/
+*.bam
+*.bai
+*.vcf
+*.vcf.gz
+*.fastq
+*.fastq.gz
+*.fq
+*.fq.gz
+
+# Snakemake
+.snakemake/
+
+# Docker
+*.tar
+
+# LLM models (large files)
+models/*.gguf
+models/*.bin

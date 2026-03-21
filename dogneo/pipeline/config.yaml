@@ -1,0 +1,65 @@
+# Dog mRNA SOS — Pipeline Configuration Template
+# FOR RESEARCH USE ONLY
+
+sample_id: "DOG001"
+output_dir: "results"
+threads: 8
+
+# Input FASTQ files (paired-end)
+tumor_dna_fastq:
+  - "/path/to/tumor_R1.fastq.gz"
+  - "/path/to/tumor_R2.fastq.gz"
+normal_dna_fastq:
+  - "/path/to/normal_R1.fastq.gz"
+  - "/path/to/normal_R2.fastq.gz"
+tumor_rna_fastq:
+  - "/path/to/rna_R1.fastq.gz"
+  - "/path/to/rna_R2.fastq.gz"
+
+# DLA alleles (leave empty for automatic typing via KPR)
+dla_alleles: []
+# Example with manual alleles:
+# dla_alleles:
+#   - "DLA-88*001:01"
+#   - "DLA-88*002:01"
+#   - "DLA-12*001:01"
+
+# Reference genome
+reference:
+  genome_fasta: "/ref/canfam3.1/genome.fa"
+  genome_name: "CanFam3.1"
+  annotation_gtf: "/ref/canfam3.1/genes.gtf"
+  known_sites_vcf: "/ref/canfam3.1/known_sites.vcf.gz"
+  star_index_dir: "/ref/canfam3.1/star_index"
+  bwa_index_prefix: "/ref/canfam3.1/bwa_index/genome"
+  snpeff_db: "CanFam3.1.105"
+
+# Tool paths (defaults work inside Docker)
+tools:
+  bwa: "bwa"
+  star: "STAR"
+  gatk: "gatk"
+  samtools: "samtools"
+  salmon: "salmon"
+  snpeff: "snpEff"
+  netmhcpan: "netMHCpan"
+  mhcflurry: "mhcflurry-predict"
+
+# Peptide generation
+mhci_peptide_lengths: [8, 9, 10, 11]
+mhcii_peptide_lengths: [15, 16, 17]
+
+# Filtering thresholds
+min_vaf: 0.05
+min_expression_tpm: 1.0
+max_binding_affinity_nm: 500.0
+
+# LLM configuration (optional — for AI-assisted analysis)
+llm:
+  default_tier: "cli"  # cli | local | cloud
+  gemini_cli_model: "gemini-2.5-flash"
+  claude_cli_model: "claude-sonnet-4-6"
+  codex_cli_model: "gpt-5.4"
+  cli_timeout: 180
+  # local_model_path: "/models/BioMistral-7B-Q4_K_M.gguf"
+  # cloud_model: "gpt-4o"
