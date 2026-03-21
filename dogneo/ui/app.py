@@ -54,13 +54,15 @@ def _run_uploaded(vcf_file, expr_file, alleles_str, binding_tool):
     from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
 
     import tempfile
-    tmpdir = tempfile.mkdtemp()
+    tmpdir = tempfile.mkdtemp()  # Managed by Streamlit session lifecycle
     vcf_path = Path(tmpdir) / "uploaded.vcf"
+    vcf_file.seek(0)
     vcf_path.write_bytes(vcf_file.read())
 
     expr_path = None
     if expr_file:
         expr_path = Path(tmpdir) / "expression.sf"
+        expr_file.seek(0)
         expr_path.write_bytes(expr_file.read())
 
     alleles = [a.strip() for a in alleles_str.split(",") if a.strip()] if alleles_str else []

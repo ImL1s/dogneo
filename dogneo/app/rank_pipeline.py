@@ -54,13 +54,24 @@ def _auto_load_alleles() -> list[str]:
     mgr = ReferenceDataManager()
     dla_path = mgr.get_dla_alleles_path()
     if dla_path.exists():
-        alleles = [
-            line.strip()
-            for line in open(dla_path)
-            if line.strip() and not line.strip().startswith("#")
-        ]
+        with open(dla_path) as f:
+            alleles = [
+                line.strip()
+                for line in f
+                if line.strip() and not line.strip().startswith("#")
+            ]
         return alleles[:4]
     return []
+
+
+def _internet_available(timeout: float = 3.0) -> bool:
+    """Quick check if internet is reachable."""
+    import socket
+    try:
+        socket.create_connection(("tools-cluster-interface.iedb.org", 80), timeout=timeout)
+        return True
+    except OSError:
+        return False
 
 
 def _resolve_binding_tool(tool: str) -> str:
@@ -72,7 +83,9 @@ def _resolve_binding_tool(tool: str) -> str:
         return tool
     if shutil.which("netMHCpan"):
         return "netmhcpan"
-    return "iedb"
+    if _internet_available():
+        return "iedb"
+    return "none"
 
 
 def _auto_detect_proteome(explicit_path: Path | None) -> Path | None:
@@ -99,6 +112,21 @@ def run_rank_pipeline(inp: RankInput, output_dir: Path) -> RankResult:
     """
     sample_dir = output_dir / inp.sample_id
     sample_dir.mkdir(parents=True, exist_ok=True)
+    explanations: dict[str, str] = {}
+
+    # Initialize explainer if LLM tier is set
+    explainer = None
+    if inp.llm_tier != "none":
+        try:
+            from dogneo.config import LLMConfig
+            from dogneo.llm.explainer import PipelineExplainer
+            from dogneo.llm.router import LLMRouter
+
+            llm_config = LLMConfig(default_tier=inp.llm_tier)
+            router = LLMRouter(config=llm_config)
+            explainer = PipelineExplainer(router=router)
+        except Exception as e:
+            logger.warning("Could not initialize LLM explainer: %s", e)
 
     # Auto-load alleles if none provided
     alleles = inp.alleles
@@ -110,6 +138,9 @@ def run_rank_pipeline(inp: RankInput, output_dir: Path) -> RankResult:
     # Step 1: Load and filter variants
     variants = load_vcf(str(inp.vcf_path))
     coding = filter_variants(variants)
+
+    if explainer:
+        explanations["variants"] = explainer.explain_variants(variants, coding)
 
     # Step 2: Load expression (optional)
     if inp.expression_path:
@@ -131,6 +162,9 @@ def run_rank_pipeline(inp: RankInput, output_dir: Path) -> RankResult:
             peptides_by_variant[v.variant_id] = peps
 
     total_peptides = sum(len(peps) for peps in peptides_by_variant.values())
+
+    if explainer:
+        explanations["peptides"] = explainer.explain_peptides(peptides_by_variant, total_peptides)
 
     # Step 4: Binding prediction + ranking
     binding_tool_used = _resolve_binding_tool(inp.binding_tool)
@@ -192,6 +226,10 @@ def run_rank_pipeline(inp: RankInput, output_dir: Path) -> RankResult:
     else:
         ranked = candidates_list
 
+    if explainer and ranked:
+        explanations["binding"] = explainer.explain_binding(ranked)
+        explanations["ranking"] = explainer.explain_ranking(ranked[:10])
+
     # Step 5: Export
     if "tsv" in inp.formats:
         export_tsv(ranked, sample_dir / "candidates.tsv")
@@ -200,11 +238,17 @@ def run_rank_pipeline(inp: RankInput, output_dir: Path) -> RankResult:
     if "fasta" in inp.formats:
         export_fasta(ranked, sample_dir / "candidates.fasta")
 
-    return RankResult(
+    result = RankResult(
         candidates=ranked,
         variants_total=len(variants),
         variants_coding=len(coding),
         peptides_total=total_peptides,
         binding_tool_used=binding_tool_used,
+        explanations=explanations,
         alleles_used=alleles,
     )
+
+    if explainer:
+        explanations["summary"] = explainer.explain_for_owner(result)
+
+    return result

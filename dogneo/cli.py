@@ -115,7 +115,7 @@ def rank(
         alleles=allele_list,
         mhci_lengths=[int(x) for x in mhci_lengths.split(",")],
         protein_db_path=Path(protein_db) if protein_db else None,
-        binding_tool="none",
+        binding_tool="auto",
         llm_tier=llm_tier,
         formats=[f.strip().lower() for f in formats.split(",")],
     )
@@ -188,6 +188,56 @@ def rerank(
     click.echo(f"   Re-ranked {len(result.candidates)} candidates")
     click.echo(f"   {result.binding_matched} matched, {result.binding_unmatched} unmatched")
     click.secho(f"✅ Results written to: {outdir}", fg="green")
+
+
+@cli.command("design-mrna")
+@click.option("--candidates", "-c", required=True, type=click.Path(exists=True),
+              help="Candidates JSON from a previous dogneo rank run.")
+@click.option("--top-n", default=10, help="Number of top candidates to include.")
+@click.option("--output-dir", "-o", default="mrna_design", help="Output directory.")
+@click.option("--llm-tier", type=click.Choice(["cli", "local", "cloud", "none"]),
+              default="none", help="LLM tier for design review.")
+def design_mrna(candidates: str, top_n: int, output_dir: str, llm_tier: str) -> None:
+    """Design codon-optimized mRNA construct from top candidates."""
+    import json as _json
+    click.echo(f"⚠️  {RUO_DISCLAIMER}")
+    click.echo(f"🧬 DogNeo v{__version__} — mRNA Designer")
+
+    with open(candidates) as f:
+        data = _json.load(f)
+
+    candidate_dicts = data.get("candidates", [])
+    if not candidate_dicts:
+        click.secho("❌ No candidates found in JSON.", fg="red")
+        sys.exit(1)
+
+    from dogneo.app.rerank_pipeline import _candidate_from_dict
+    from dogneo.core.mrna_designer import design_construct
+
+    candidate_objs = [_candidate_from_dict(d) for d in candidate_dicts]
+    click.echo(f"   Loaded {len(candidate_objs)} candidates, selecting top {top_n}")
+
+    construct = design_construct(candidate_objs, top_n=top_n)
+
+    outdir = Path(output_dir)
+    outdir.mkdir(parents=True, exist_ok=True)
+
+    # Write FASTA
+    fasta_path = outdir / "construct.fasta"
+    fasta_path.write_text(construct.to_fasta(), encoding="utf-8")
+
+    # Write epitopes TSV
+    epitopes_path = outdir / "epitopes.tsv"
+    with open(epitopes_path, "w") as f:
+        f.write("rank\tgene\tpeptide\n")
+        for i, (pep, gene) in enumerate(zip(construct.epitope_sequences, construct.epitope_genes), 1):
+            f.write(f"{i}\t{gene}\t{pep}\n")
+
+    click.echo(f"   {construct.epitope_count} epitopes in construct")
+    click.echo(f"   Sequence length: {len(construct.full_sequence)} nt")
+    click.secho(f"✅ mRNA construct written to: {outdir}", fg="green")
+    click.echo(f"   📄 construct.fasta  — Full mRNA sequence")
+    click.echo(f"   📄 epitopes.tsv     — Selected epitopes")
 
 
 @cli.command()
@@ -300,7 +350,8 @@ def setup(force: bool) -> None:
 
     # DLA alleles (bundled)
     dla_path = mgr.get_dla_alleles_path()
-    n_alleles = sum(1 for line in open(dla_path) if line.strip())
+    with open(dla_path) as f:
+        n_alleles = sum(1 for line in f if line.strip())
     click.echo(f"✅ DLA alleles: bundled ({n_alleles} alleles from IPD-MHC)")
 
     click.secho("\n✅ Setup complete! Run `dogneo demo` to test the pipeline.", fg="green")
@@ -348,8 +399,9 @@ def demo(output_dir: str, binding: str) -> None:
     click.echo(f"📂 Using reference: {proteome}")
 
     # Load alleles
-    alleles = [line.strip() for line in open(alleles_path)
-               if line.strip() and not line.strip().startswith('#')]
+    with open(alleles_path) as f:
+        alleles = [line.strip() for line in f
+                   if line.strip() and not line.strip().startswith('#')]
     allele_str = ",".join(alleles[:4])  # Use first 4 for demo speed
 
     # Invoke the rank command programmatically
