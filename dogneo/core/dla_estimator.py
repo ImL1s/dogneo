@@ -21,12 +21,12 @@ from dogneo.core.binding import BindingPrediction
 
 logger = logging.getLogger(__name__)
 
-# Amino acid hydrophobicity index (Kyte-Doolittle, normalized 0-1)
+# Amino acid hydrophobicity index (Kyte-Doolittle, normalized to 0-1 via (raw+4.5)/9.0)
 _HYDROPHOBICITY: dict[str, float] = {
-    "I": 1.00, "V": 0.93, "L": 0.84, "F": 0.61, "C": 0.56,
-    "M": 0.42, "A": 0.40, "G": 0.16, "T": 0.12, "S": 0.07,
-    "W": 0.07, "Y": 0.04, "P": 0.05, "H": 0.00, "D": 0.00,
-    "E": 0.00, "N": 0.00, "Q": 0.00, "K": 0.00, "R": 0.00,
+    "I": 1.00, "V": 0.92, "L": 0.84, "F": 0.61, "C": 0.53,
+    "M": 0.71, "A": 0.70, "G": 0.46, "T": 0.42, "S": 0.41,
+    "W": 0.40, "Y": 0.37, "P": 0.32, "H": 0.14, "D": 0.11,
+    "E": 0.11, "N": 0.11, "Q": 0.11, "K": 0.07, "R": 0.00,
 }
 
 # DLA-88 anchor preferences (simplified from published motifs)
@@ -41,8 +41,8 @@ _ANCHOR_WEIGHTS = {
 }
 
 # Preferred residues at key positions for DLA-88
-_PREFERRED_P2 = set("LIVMFAY")      # Hydrophobic at P2
-_PREFERRED_PW = set("LIVMFAYW")     # Hydrophobic at C-terminal
+_PREFERRED_P2 = set("LIVMFY")       # Strongly hydrophobic at P2
+_PREFERRED_PW = set("LIVMFYW")      # Strongly hydrophobic at C-terminal
 _PREFERRED_P1 = set("RKHDEY")       # Charged/polar at P1
 
 
@@ -156,7 +156,7 @@ def estimate_binding(
                 allele=allele,
                 affinity_nm=affinity,
                 percentile_rank=round(percentile, 2),
-                tool="dogneo-estimator",
+                tool="dogneo-estimator-pan",
                 mhc_class=1,
             ))
 

@@ -12,7 +12,7 @@ from pathlib import Path
 
 from dogneo.core.binding import BindingPrediction
 from dogneo.core.peptides import ProteinDatabase, generate_peptides
-from dogneo.core.ranking import NeoantigenCandidate, build_candidates, rank_candidates
+from dogneo.core.ranking import NeoantigenCandidate, rank_candidates
 from dogneo.core.variants import load_vcf, filter_variants
 from dogneo.export.exporters import export_fasta, export_json, export_tsv
 
@@ -62,16 +62,6 @@ def _auto_load_alleles() -> list[str]:
             ]
         return alleles[:4]
     return []
-
-
-def _internet_available(timeout: float = 3.0) -> bool:
-    """Quick check if internet is reachable."""
-    import socket
-    try:
-        socket.create_connection(("tools-cluster-interface.iedb.org", 80), timeout=timeout)
-        return True
-    except OSError:
-        return False
 
 
 def _resolve_binding_tool(tool: str) -> str:

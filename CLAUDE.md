@@ -75,7 +75,7 @@ dogneo/
 ### Key Architecture Decisions
 
 - **`app/` service layer** — `run_rank_pipeline()` is the single entry point for ranking, called by CLI, UI, and tests. CLI is thin (parse args → call service → print output).
-- **Binding fallback chain** — `auto` resolves: netMHCpan (local) → IEDB API (remote, free) → none (offline). Implemented in `_resolve_binding_tool()`.
+- **Binding fallback chain** — `auto` resolves: netMHCpan (local) → dogneo-estimator-pan (built-in) → none. IEDB API does not support DLA alleles so is only available via explicit `--binding iedb` for HLA work. Implemented in `_resolve_binding_tool()`.
 - **IEDB client** — `core/iedb_client.py` caches results to `~/.dogneo/cache/iedb/` with rate limiting (1s between requests). Supports DLA alleles via NetMHCpan EL backend.
 - **Explainer hooks** — When `--llm-tier` is set, `PipelineExplainer` generates plain-language explanations at each pipeline step, stored in `RankResult.explanations`.
 

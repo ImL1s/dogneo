@@ -8,7 +8,7 @@ From somatic variants to ranked vaccine candidates — purpose-built for dogs.
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-137_passed-brightgreen.svg)](#-verification)
+[![Tests](https://img.shields.io/badge/tests-195_passed-brightgreen.svg)](#-verification)
 [![install](https://img.shields.io/badge/install-GitHub-orange.svg)](#-installation)
 
 [Quick Start](#-quick-start) · [Usage](#-usage) · [LLM Config](#-llm-backend-configuration) · [Architecture](#-pipeline-architecture) · [License](#-license)
@@ -180,7 +180,7 @@ dogneo run --config pipeline_config.yaml
 |---------|-------------|
 | `dogneo setup` | Download reference data (CanFam3.1 proteome) |
 | `dogneo demo` | Run full pipeline on bundled demo data |
-| `dogneo rank` | Rank neoantigens from a VCF file (auto IEDB binding) |
+| `dogneo rank` | Rank neoantigens from a VCF file (auto DLA binding estimation) |
 | `dogneo rerank` | Import external binding results (NetMHCpan/MHCflurry) and re-score |
 | `dogneo design-mrna` | Generate codon-optimized mRNA construct from top candidates |
 | `dogneo report` | Generate HTML/Markdown report |
@@ -333,7 +333,7 @@ Contributions are welcome! Please feel free to submit issues and pull requests.
 git clone https://github.com/ImL1s/dogneo.git
 cd dogneo
 pip install -e ".[all]"
-python -m pytest tests/ -v        # Run tests (137 passing)
+python -m pytest tests/ -v        # Run tests (195 passing)
 ```
 
 ## ⚖️ Legal Notices

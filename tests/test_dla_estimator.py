@@ -18,7 +18,7 @@ class TestDLAEstimator:
             alleles=["DLA-88*001:01"],
         )
         assert len(results) == 2
-        assert all(r.tool == "dogneo-estimator" for r in results)
+        assert all(r.tool == "dogneo-estimator-pan" for r in results)
 
     def test_estimated_affinity_is_numeric(self):
         from dogneo.core.dla_estimator import estimate_binding
