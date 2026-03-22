@@ -282,7 +282,7 @@ export GOOGLE_API_KEY=AI...
 | 5 | Salmon / Kallisto | Expression quantification |
 | 6 | DogNeo | Mutant peptide windows (8–11aa MHC-I, 15–17aa MHC-II) |
 | 7 | KPR | DLA genotyping from RNA-seq |
-| 8 | NetMHCpan / MHCflurry / IEDB | Binding prediction |
+| 8 | NetMHCpan / DogNeo estimator | Binding prediction |
 | 9 | DogNeo | Multi-factor immunogenicity scoring |
 | 10 | DogNeo | TSV / JSON / FASTA / HTML report |
 

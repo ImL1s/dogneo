@@ -30,7 +30,7 @@ mypy dogneo/
 # CLI (10 commands)
 dogneo setup                  # download CanFam3.1 proteome (~15 MB, one-time)
 dogneo demo                   # full pipeline on bundled osteosarcoma data
-dogneo rank --vcf somatic.vcf # rank with auto IEDB binding prediction
+dogneo rank --vcf somatic.vcf # rank with auto DLA binding estimation
 dogneo rerank --candidates results/candidates.json --binding netmhcpan.tsv
 dogneo design-mrna --candidates results/candidates.json --top-n 10
 dogneo report --input ranked.json --output report.html
@@ -51,7 +51,8 @@ dogneo/
 │   ├── variants.py         #   VCF parsing (SnpEff ANN / VEP CSQ)
 │   ├── peptides.py         #   Mutant peptide window generation
 │   ├── binding.py          #   NetMHCpan / MHCflurry wrappers
-│   ├── iedb_client.py      #   IEDB API client (cache + rate limit)
+│   ├── iedb_client.py      #   IEDB API client (HLA only, cache + rate limit)
+│   ├── dla_estimator.py    #   Built-in DLA-88 binding estimator (pan-allele)
 │   ├── ranking.py          #   6-factor composite scoring
 │   ├── mrna_designer.py    #   Canine codon optimization + mRNA construct
 │   ├── expression.py       #   RNA-seq expression (Salmon/Kallisto)
@@ -76,7 +77,8 @@ dogneo/
 
 - **`app/` service layer** — `run_rank_pipeline()` is the single entry point for ranking, called by CLI, UI, and tests. CLI is thin (parse args → call service → print output).
 - **Binding fallback chain** — `auto` resolves: netMHCpan (local) → dogneo-estimator-pan (built-in) → none. IEDB API does not support DLA alleles so is only available via explicit `--binding iedb` for HLA work. Implemented in `_resolve_binding_tool()`.
-- **IEDB client** — `core/iedb_client.py` caches results to `~/.dogneo/cache/iedb/` with rate limiting (1s between requests). Supports DLA alleles via NetMHCpan EL backend.
+- **DLA estimator** — `core/dla_estimator.py` built-in pan-allele estimator based on published DLA-88 anchor motifs. Zero dependency, works offline. Results labeled `dogneo-estimator-pan`.
+- **IEDB client** — `core/iedb_client.py` available for HLA (human) work via `--binding iedb`. Does NOT support DLA alleles.
 - **Explainer hooks** — When `--llm-tier` is set, `PipelineExplainer` generates plain-language explanations at each pipeline step, stored in `RankResult.explanations`.
 
 ## Data Flow
@@ -90,8 +92,8 @@ MutantPeptide (peptides.py)
   → sliding window over CanFam3.1 proteome
   → MHC-I: 8-11aa; MHC-II: 15-17aa
 
-BindingPrediction (iedb_client.py or binding.py)
-  → IEDB API (default, free) or NetMHCpan/MHCflurry (local)
+BindingPrediction (dla_estimator.py or binding.py)
+  → dogneo-estimator-pan (default, built-in) or NetMHCpan (local)
   → <50 nM = strong binder, <500 nM = weak binder
 
 NeoantigenCandidate (ranking.py)
@@ -129,12 +131,12 @@ All computational analysis works without any LLM. `--llm-tier none` (default) sk
 - **DLA** (Dog Leukocyte Antigen): canine MHC. 6 DLA-88 Class I alleles bundled from IPD-MHC.
 - **HGVS.p**: protein mutation notation (e.g., `p.Val245Ile`). Parsed in `peptides.py`.
 - **CanFam3.1**: default canine proteome, auto-downloaded via `dogneo setup`.
-- **IEDB API**: free web service for DLA binding prediction. Used as default when NetMHCpan unavailable.
+- **DLA estimator**: built-in pan-allele binding estimator based on DLA-88 anchor motifs. Default when NetMHCpan unavailable.
 - **Canine codon table**: `mrna_designer.py:CANINE_CODON_TABLE` — optimal codons for Canis lupus familiaris.
 
 ## Test Structure
 
-189 tests in `tests/` covering: variants, peptides, ranking, exporters, LLM router, CLI, rank pipeline, IEDB client, binding integration, rerank pipeline, explainer, mRNA designer, UI charts.
+195 tests in `tests/` covering: variants, peptides, ranking, exporters, LLM router, CLI, rank pipeline, IEDB client, DLA estimator, binding integration, rerank pipeline, explainer, mRNA designer, UI charts.
 
 Shared fixtures in `conftest.py`. Test data in `tests/data/`; demo data in `dogneo/data/demo/`.
 
