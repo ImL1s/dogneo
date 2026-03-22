@@ -10,7 +10,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-
 MOCK_IEDB_RESPONSE = (
     "allele\tseq_num\tstart\tend\tlength\tpeptide\tmethod\tpercentile_rank\tic50\n"
     "DLA-88*001:01\t1\t1\t9\t9\tRAIVGAPPS\tnetmhcpan_el\t1.5\t125.0\n"
@@ -38,9 +37,8 @@ class TestPipelineWithIEDB:
 
     def test_pipeline_with_iedb_produces_scored_candidates(self, tmp_path):
         """When binding_tool=iedb, candidates should have real affinity values."""
-        from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
-
         import dogneo.data as _data_pkg
+        from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
         demo_dir = Path(_data_pkg.__file__).parent / "demo"
         vcf_path = demo_dir / "canine_osteosarcoma.vcf"
 
@@ -75,9 +73,8 @@ class TestPipelineWithIEDB:
 
     def test_pipeline_with_iedb_ranks_by_score(self, tmp_path):
         """Scored candidates should be ranked by composite_score descending."""
-        from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
-
         import dogneo.data as _data_pkg
+        from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
         demo_dir = Path(_data_pkg.__file__).parent / "demo"
         vcf_path = demo_dir / "canine_osteosarcoma.vcf"
 
@@ -111,9 +108,8 @@ class TestPipelineWithIEDB:
 
     def test_pipeline_auto_resolves_to_estimator(self, tmp_path):
         """binding_tool=auto should resolve to estimator when netMHCpan not installed."""
-        from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
-
         import dogneo.data as _data_pkg
+        from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
         demo_dir = Path(_data_pkg.__file__).parent / "demo"
         vcf_path = demo_dir / "canine_osteosarcoma.vcf"
 

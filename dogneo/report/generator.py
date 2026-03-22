@@ -6,13 +6,12 @@ with optional LLM-assisted commentary.
 
 from __future__ import annotations
 
-import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from dogneo import __version__, RUO_DISCLAIMER
+from dogneo import RUO_DISCLAIMER, __version__
 from dogneo.core.ranking import NeoantigenCandidate
 from dogneo.llm.router import LLMRouter, TaskType
 

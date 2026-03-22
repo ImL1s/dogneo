@@ -5,12 +5,9 @@ import csv
 import json
 from pathlib import Path
 
-import pytest
-
-from dogneo import __version__, RUO_DISCLAIMER
+from dogneo import __version__
 from dogneo.core.ranking import NeoantigenCandidate
-from dogneo.export.exporters import export_fasta, export_tsv, export_json
-
+from dogneo.export.exporters import export_fasta, export_json, export_tsv
 
 # ---------------------------------------------------------------------------
 # FASTA export

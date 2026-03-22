@@ -101,9 +101,8 @@ class ReferenceDataManager:
 
         # Decompress
         logger.info("Decompressing %s...", gz_path.name)
-        with gzip.open(gz_path, "rb") as f_in:
-            with open(fa_path, "wb") as f_out:
-                shutil.copyfileobj(f_in, f_out)
+        with gzip.open(gz_path, "rb") as f_in, open(fa_path, "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
 
         # Clean up .gz
         gz_path.unlink(missing_ok=True)

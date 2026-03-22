@@ -7,18 +7,16 @@ from dogneo.core.binding import BindingPrediction
 from dogneo.core.peptides import MutantPeptide
 from dogneo.core.ranking import (
     NeoantigenCandidate,
-    ScoringWeights,
-    _score_binding,
-    _score_expression,
-    _score_vaf,
-    _score_self_difference,
     _score_agretopicity,
+    _score_binding,
     _score_caller_agreement,
-    rank_candidates,
+    _score_expression,
+    _score_self_difference,
+    _score_vaf,
     build_candidates,
+    rank_candidates,
 )
 from dogneo.core.variants import SomaticVariant
-
 
 # ---------------------------------------------------------------------------
 # Individual scoring functions

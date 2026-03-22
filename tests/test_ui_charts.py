@@ -4,8 +4,6 @@ TDD Phase 6: Streamlit UI visualization components.
 """
 from __future__ import annotations
 
-import pytest
-
 from dogneo.core.binding import BindingPrediction
 from dogneo.core.peptides import MutantPeptide
 from dogneo.core.ranking import NeoantigenCandidate
@@ -55,15 +53,17 @@ def _make_candidates(n: int = 5) -> list[NeoantigenCandidate]:
 class TestScoreDistributionChart:
 
     def test_returns_plotly_figure(self):
-        from dogneo.ui.charts import score_distribution_chart
         import plotly.graph_objects as go
+
+        from dogneo.ui.charts import score_distribution_chart
 
         fig = score_distribution_chart(_make_candidates())
         assert isinstance(fig, go.Figure)
 
     def test_empty_candidates(self):
-        from dogneo.ui.charts import score_distribution_chart
         import plotly.graph_objects as go
+
+        from dogneo.ui.charts import score_distribution_chart
 
         fig = score_distribution_chart([])
         assert isinstance(fig, go.Figure)
@@ -72,8 +72,9 @@ class TestScoreDistributionChart:
 class TestBindingHeatmap:
 
     def test_returns_plotly_figure(self):
-        from dogneo.ui.charts import binding_heatmap
         import plotly.graph_objects as go
+
+        from dogneo.ui.charts import binding_heatmap
 
         fig = binding_heatmap(_make_candidates())
         assert isinstance(fig, go.Figure)
@@ -82,8 +83,9 @@ class TestBindingHeatmap:
 class TestRadarChart:
 
     def test_returns_plotly_figure(self):
-        from dogneo.ui.charts import score_radar_chart
         import plotly.graph_objects as go
+
+        from dogneo.ui.charts import score_radar_chart
 
         candidate = _make_candidates(1)[0]
         fig = score_radar_chart(candidate)
@@ -93,8 +95,9 @@ class TestRadarChart:
 class TestScatterPlot:
 
     def test_returns_plotly_figure(self):
-        from dogneo.ui.charts import candidate_scatter
         import plotly.graph_objects as go
+
+        from dogneo.ui.charts import candidate_scatter
 
         fig = candidate_scatter(_make_candidates(), x="binding_affinity_nm", y="expression_tpm")
         assert isinstance(fig, go.Figure)

@@ -11,16 +11,15 @@ from enum import Enum
 
 from dogneo.config import LLMConfig
 from dogneo.llm.backends import (
-    LLMBackend,
-    GeminiCLIBackend,
+    AnthropicBackend,
     ClaudeCodeCLIBackend,
     CodexCLIBackend,
+    GeminiAPIBackend,
+    GeminiCLIBackend,
+    LLMBackend,
     LocalLlamaBackend,
     OpenAIBackend,
-    AnthropicBackend,
-    GeminiAPIBackend,
 )
-from dogneo.llm.cli_wrapper import check_cli_availability
 
 logger = logging.getLogger(__name__)
 

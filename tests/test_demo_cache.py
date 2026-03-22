@@ -4,9 +4,6 @@ TDD Phase 1.2: demo should reuse cached proteome, not re-download.
 """
 from __future__ import annotations
 
-from pathlib import Path
-from unittest.mock import patch
-
 import pytest
 
 
@@ -23,6 +20,7 @@ class TestDemoCacheBehavior:
             pytest.skip("Proteome not cached — run dogneo setup first")
 
         from click.testing import CliRunner
+
         from dogneo.cli import cli
 
         runner = CliRunner()
@@ -42,6 +40,7 @@ class TestDemoCacheBehavior:
             pytest.skip("Proteome not cached — run dogneo setup first")
 
         from click.testing import CliRunner
+
         from dogneo.cli import cli
 
         runner = CliRunner()

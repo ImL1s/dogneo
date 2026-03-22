@@ -7,8 +7,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 
 def _create_candidates_json(path: Path, sample_id: str = "TEST") -> Path:
     """Create a minimal candidates.json for testing."""

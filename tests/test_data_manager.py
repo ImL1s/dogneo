@@ -5,7 +5,6 @@ TDD RED phase: these tests define the expected API surface.
 from __future__ import annotations
 
 import gzip
-import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 

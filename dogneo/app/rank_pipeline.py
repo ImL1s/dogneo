@@ -13,7 +13,7 @@ from pathlib import Path
 from dogneo.core.binding import BindingPrediction
 from dogneo.core.peptides import ProteinDatabase, generate_peptides
 from dogneo.core.ranking import NeoantigenCandidate, rank_candidates
-from dogneo.core.variants import load_vcf, filter_variants
+from dogneo.core.variants import filter_variants, load_vcf
 from dogneo.export.exporters import export_fasta, export_json, export_tsv
 
 logger = logging.getLogger(__name__)

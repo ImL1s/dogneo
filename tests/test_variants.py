@@ -6,16 +6,15 @@ from pathlib import Path
 import pytest
 
 from dogneo.core.variants import (
+    CODING_EFFECTS,
     SomaticVariant,
-    load_vcf,
-    filter_variants,
-    merge_callers,
-    _parse_info_field,
     _extract_snpeff_annotation,
     _extract_vep_annotation,
-    CODING_EFFECTS,
+    _parse_info_field,
+    filter_variants,
+    load_vcf,
+    merge_callers,
 )
-
 
 # ---------------------------------------------------------------------------
 # INFO / ANN / CSQ parsing

@@ -3,19 +3,15 @@ from __future__ import annotations
 
 import subprocess
 
-import pytest
-
 from dogneo.llm.cli_wrapper import (
-    CLIResult,
-    _build_gemini_cmd,
     _build_claude_cmd,
     _build_codex_cmd,
     _build_env,
+    _build_gemini_cmd,
     call_ai_cli,
     call_ai_with_fallback,
     check_cli_availability,
 )
-
 
 # ---------------------------------------------------------------------------
 # Command building

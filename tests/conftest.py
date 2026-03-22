@@ -10,7 +10,6 @@ from dogneo.core.peptides import MutantPeptide
 from dogneo.core.ranking import NeoantigenCandidate
 from dogneo.core.variants import SomaticVariant
 
-
 DATA_DIR = Path(__file__).parent / "data"
 
 

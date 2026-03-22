@@ -11,7 +11,7 @@ from pathlib import Path
 
 import click
 
-from dogneo import __version__, RUO_DISCLAIMER
+from dogneo import RUO_DISCLAIMER, __version__
 
 logger = logging.getLogger("dogneo")
 
@@ -230,14 +230,16 @@ def design_mrna(candidates: str, top_n: int, output_dir: str, llm_tier: str) -> 
     epitopes_path = outdir / "epitopes.tsv"
     with open(epitopes_path, "w") as f:
         f.write("rank\tgene\tpeptide\n")
-        for i, (pep, gene) in enumerate(zip(construct.epitope_sequences, construct.epitope_genes), 1):
+        for i, (pep, gene) in enumerate(
+            zip(construct.epitope_sequences, construct.epitope_genes, strict=True), 1,
+        ):
             f.write(f"{i}\t{gene}\t{pep}\n")
 
     click.echo(f"   {construct.epitope_count} epitopes in construct")
     click.echo(f"   Sequence length: {len(construct.full_sequence)} nt")
     click.secho(f"✅ mRNA construct written to: {outdir}", fg="green")
-    click.echo(f"   📄 construct.fasta  — Full mRNA sequence")
-    click.echo(f"   📄 epitopes.tsv     — Selected epitopes")
+    click.echo("   📄 construct.fasta  — Full mRNA sequence")
+    click.echo("   📄 epitopes.tsv     — Selected epitopes")
 
 
 @cli.command()
@@ -290,9 +292,9 @@ def report(input_path: str, fmt: str, output: str, llm_tier: str) -> None:
     sample_id = data.get("metadata", {}).get("sample_id", "UNKNOWN")
     click.echo(f"📄 Generating {fmt} report from {total} candidates...")
 
-    from dogneo.report.generator import ReportGenerator
     from dogneo.config import LLMConfig
     from dogneo.llm.router import LLMRouter
+    from dogneo.report.generator import ReportGenerator
 
     llm_router = None
     if llm_tier != "none":
@@ -438,8 +440,8 @@ def check_llm() -> None:
     click.echo(f"🤖 DogNeo v{__version__} — LLM Backend Check")
     click.echo()
 
-    from dogneo.llm.cli_wrapper import check_cli_availability
     from dogneo.config import LLMConfig
+    from dogneo.llm.cli_wrapper import check_cli_availability
 
     # CLI backends
     click.echo("📡 CLI Backends (Tier 1 — Free):")

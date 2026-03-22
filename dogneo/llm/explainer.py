@@ -10,8 +10,8 @@ import logging
 import math
 from typing import TYPE_CHECKING
 
-from dogneo.core.variants import SomaticVariant
 from dogneo.core.ranking import NeoantigenCandidate
+from dogneo.core.variants import SomaticVariant
 from dogneo.llm.router import LLMRouter, TaskType
 
 if TYPE_CHECKING:
@@ -90,8 +90,14 @@ class PipelineExplainer:
 
     def explain_binding(self, candidates: list[NeoantigenCandidate]) -> str:
         """Explain binding prediction results."""
-        strong = sum(1 for c in candidates if not math.isnan(c.binding.affinity_nm) and c.binding.affinity_nm < 50)
-        weak = sum(1 for c in candidates if not math.isnan(c.binding.affinity_nm) and 50 <= c.binding.affinity_nm < 500)
+        strong = sum(
+            1 for c in candidates
+            if not math.isnan(c.binding.affinity_nm) and c.binding.affinity_nm < 50
+        )
+        weak = sum(
+            1 for c in candidates
+            if not math.isnan(c.binding.affinity_nm) and 50 <= c.binding.affinity_nm < 500
+        )
         total = len(candidates)
 
         fallback = (
@@ -102,7 +108,8 @@ class PipelineExplainer:
 
         prompt = (
             f"You are a veterinary genomics assistant. Explain to a dog owner:\n\n"
-            f"We tested {total} peptide fragments against your dog's immune system markers (DLA alleles). "
+            f"We tested {total} peptide fragments against your dog's "
+            f"immune system markers (DLA alleles). "
             f"{strong} bind very strongly (excellent vaccine candidates), "
             f"{weak} bind moderately (possible candidates).\n\n"
             f"Explain what binding strength means for vaccine effectiveness. "
@@ -142,15 +149,17 @@ class PipelineExplainer:
 
         return self._generate(prompt, fallback)
 
-    def explain_for_owner(self, result: "RankResult") -> str:
+    def explain_for_owner(self, result: RankResult) -> str:
         """Generate a complete narrative summary for dog owners."""
         top_genes = sorted(set(
             c.variant.gene for c in result.candidates[:5] if c.variant.gene
         ))
 
         fallback = (
-            f"Analysis complete. We examined {result.variants_total} mutations in your dog's tumor DNA. "
-            f"{result.variants_coding} affect proteins, generating {result.peptides_total} candidate peptides. "
+            f"Analysis complete. We examined {result.variants_total} "
+            f"mutations in your dog's tumor DNA. "
+            f"{result.variants_coding} affect proteins, "
+            f"generating {result.peptides_total} candidate peptides. "
             f"Binding predictions used: {result.binding_tool_used}. "
             f"{len(result.candidates)} candidates were evaluated. "
             f"Top genes: {', '.join(top_genes) if top_genes else 'N/A'}. "
@@ -175,7 +184,7 @@ class PipelineExplainer:
 
     def literature_check(self, genes: list[str]) -> str:
         """Cross-reference genes against known canine cancer literature."""
-        known_canine_genes = {
+        known_canine_genes = {  # noqa: E501
             "TP53": "Tumor suppressor, frequently mutated in canine osteosarcoma and mammary tumors",
             "BRAF": "Growth signal kinase, V595E mutation common in canine urothelial carcinoma",
             "KRAS": "Oncogene, mutations drive uncontrolled cell growth",

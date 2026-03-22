@@ -127,7 +127,7 @@ class IEDBClient:
         sequences = "\n".join(peptides)
         allele_str = ",".join(alleles)
         length_set = sorted(set(len(p) for p in peptides))
-        length_str = ",".join(str(l) for l in length_set)
+        length_str = ",".join(str(n) for n in length_set)
 
         response = requests.post(
             IEDB_MHCI_URL,
@@ -151,7 +151,7 @@ class IEDBClient:
                     fields = line.split("\t")
                     if len(fields) < len(header):
                         continue
-                    row = dict(zip(header, fields))
+                    row = dict(zip(header, fields))  # noqa: B905
                     try:
                         predictions.append(
                             BindingPrediction(

@@ -14,7 +14,7 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
-from dogneo import __version__, RUO_DISCLAIMER
+from dogneo import RUO_DISCLAIMER, __version__
 from dogneo.core.ranking import NeoantigenCandidate
 
 logger = logging.getLogger(__name__)

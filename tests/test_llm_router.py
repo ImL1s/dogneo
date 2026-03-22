@@ -4,9 +4,8 @@ from __future__ import annotations
 import pytest
 
 from dogneo.config import LLMConfig
-from dogneo.llm.router import LLMRouter, TaskType, create_router
 from dogneo.llm.backends import LLMBackend
-
+from dogneo.llm.router import LLMRouter, TaskType, create_router
 
 # ---------------------------------------------------------------------------
 # Fake backend for testing

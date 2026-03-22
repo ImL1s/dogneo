@@ -165,7 +165,7 @@ def design_construct(
     candidates: list[NeoantigenCandidate],
     top_n: int = 10,
     linker: str = LINKER_GPGPG,
-    llm_router: "LLMRouter | None" = None,
+    llm_router: LLMRouter | None = None,
 ) -> MRNAConstruct:
     """Design multi-epitope mRNA construct from top candidates.
 

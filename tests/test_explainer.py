@@ -6,12 +6,10 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import pytest
-
-from dogneo.core.variants import SomaticVariant
-from dogneo.core.ranking import NeoantigenCandidate
-from dogneo.core.peptides import MutantPeptide
 from dogneo.core.binding import BindingPrediction
+from dogneo.core.peptides import MutantPeptide
+from dogneo.core.ranking import NeoantigenCandidate
+from dogneo.core.variants import SomaticVariant
 
 
 def _make_variant(gene: str = "TP53", vaf: float = 0.4, tpm: float = 85.0) -> SomaticVariant:
@@ -98,8 +96,8 @@ class TestPipelineExplainer:
         assert len(result) > 0
 
     def test_explain_for_owner_is_plain_language(self):
-        from dogneo.llm.explainer import PipelineExplainer
         from dogneo.app.rank_pipeline import RankResult
+        from dogneo.llm.explainer import PipelineExplainer
 
         mock_router = MagicMock()
         mock_router.generate.return_value = (

@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from dogneo.core.binding import BindingPrediction
-from dogneo.core.ranking import NeoantigenCandidate, SomaticVariant, MutantPeptide, rank_candidates
+from dogneo.core.ranking import MutantPeptide, NeoantigenCandidate, SomaticVariant, rank_candidates
 from dogneo.export.exporters import export_fasta, export_json, export_tsv
 
 logger = logging.getLogger(__name__)
@@ -112,13 +112,27 @@ def parse_binding_results(
     return results
 
 
+def _parse_variant_id(vid: str) -> tuple[str, int, str, str]:
+    """Parse variant_id string 'chr:pos:ref>alt' into components."""
+    try:
+        parts = vid.split(":")
+        chrom = parts[0] if len(parts) >= 1 else ""
+        pos = int(parts[1]) if len(parts) >= 2 else 0
+        allele_part = parts[2] if len(parts) >= 3 else ">"
+        ref, alt = allele_part.split(">", 1) if ">" in allele_part else ("", "")
+        return chrom, pos, ref, alt
+    except (ValueError, IndexError):
+        return "", 0, "", ""
+
+
 def _candidate_from_dict(d: dict) -> NeoantigenCandidate:
     """Reconstruct a NeoantigenCandidate from a serialized dict."""
+    chrom, pos, ref, alt = _parse_variant_id(d.get("variant_id", ""))
     variant = SomaticVariant(
-        chrom=d.get("variant_id", "::>").split(":")[0],
-        pos=int(d.get("variant_id", ":0:>").split(":")[1]) if ":" in d.get("variant_id", "") else 0,
-        ref=d.get("variant_id", "::>").split(">")[0].split(":")[-1] if ">" in d.get("variant_id", "") else "",
-        alt=d.get("variant_id", "::>").split(">")[-1] if ">" in d.get("variant_id", "") else "",
+        chrom=chrom,
+        pos=pos,
+        ref=ref,
+        alt=alt,
         gene=d.get("gene", ""),
         effect="missense_variant",
         hgvs_p=d.get("mutation", ""),

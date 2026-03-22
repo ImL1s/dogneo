@@ -8,8 +8,6 @@ from pathlib import Path
 
 import pytest
 
-from dogneo.core.ranking import NeoantigenCandidate
-
 
 class TestRankInput:
     """Test RankInput dataclass validation."""
@@ -68,10 +66,9 @@ class TestRunRankPipeline:
 
     def test_pipeline_returns_rank_result(self, tmp_path):
         """Pipeline should return a RankResult with candidates."""
-        from dogneo.app.rank_pipeline import RankInput, RankResult, run_rank_pipeline
-
         # Use bundled demo VCF
         import dogneo.data as _data_pkg
+        from dogneo.app.rank_pipeline import RankInput, RankResult, run_rank_pipeline
         demo_dir = Path(_data_pkg.__file__).parent / "demo"
         vcf_path = demo_dir / "canine_osteosarcoma.vcf"
 
@@ -96,9 +93,8 @@ class TestRunRankPipeline:
 
     def test_pipeline_loads_bundled_alleles_when_none_provided(self, tmp_path):
         """When no alleles specified, should auto-load bundled DLA alleles."""
-        from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
-
         import dogneo.data as _data_pkg
+        from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
         demo_dir = Path(_data_pkg.__file__).parent / "demo"
         vcf_path = demo_dir / "canine_osteosarcoma.vcf"
 
@@ -123,9 +119,8 @@ class TestRunRankPipeline:
 
     def test_pipeline_exports_tsv(self, tmp_path):
         """Pipeline should create TSV output when requested."""
-        from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
-
         import dogneo.data as _data_pkg
+        from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
         demo_dir = Path(_data_pkg.__file__).parent / "demo"
         vcf_path = demo_dir / "canine_osteosarcoma.vcf"
 
@@ -152,9 +147,9 @@ class TestRunRankPipeline:
     def test_pipeline_exports_json(self, tmp_path):
         """Pipeline should create JSON output when requested."""
         import json
-        from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
 
         import dogneo.data as _data_pkg
+        from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
         demo_dir = Path(_data_pkg.__file__).parent / "demo"
         vcf_path = demo_dir / "canine_osteosarcoma.vcf"
 
@@ -181,10 +176,9 @@ class TestRunRankPipeline:
 
     def test_pipeline_uses_cached_proteome(self, tmp_path):
         """Pipeline should auto-detect cached proteome without re-download."""
+        import dogneo.data as _data_pkg
         from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
         from dogneo.data.manager import ReferenceDataManager
-
-        import dogneo.data as _data_pkg
         demo_dir = Path(_data_pkg.__file__).parent / "demo"
         vcf_path = demo_dir / "canine_osteosarcoma.vcf"
 

@@ -10,7 +10,6 @@ Provides a unified interface to multiple binding prediction tools:
 from __future__ import annotations
 
 import csv
-import json
 import logging
 import subprocess
 import tempfile

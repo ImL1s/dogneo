@@ -5,12 +5,11 @@ Launch with: dogneo ui  (or: streamlit run dogneo/ui/app.py)
 from __future__ import annotations
 
 import json
-import math
 from pathlib import Path
 
 import streamlit as st
 
-from dogneo import __version__, RUO_DISCLAIMER
+from dogneo import RUO_DISCLAIMER, __version__
 
 st.set_page_config(
     page_title=f"DogNeo v{__version__}",
@@ -22,9 +21,9 @@ st.set_page_config(
 
 def _run_demo():
     """Run demo pipeline and cache results."""
+    import dogneo.data as _data_pkg
     from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
     from dogneo.data.manager import ReferenceDataManager
-    import dogneo.data as _data_pkg
 
     demo_dir = Path(_data_pkg.__file__).parent / "demo"
     vcf_path = demo_dir / "canine_osteosarcoma.vcf"
@@ -51,9 +50,9 @@ def _run_demo():
 
 def _run_uploaded(vcf_file, expr_file, alleles_str, binding_tool):
     """Run pipeline on uploaded files."""
-    from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
-
     import tempfile
+
+    from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
     tmpdir = tempfile.mkdtemp()  # Managed by Streamlit session lifecycle
     vcf_path = Path(tmpdir) / "uploaded.vcf"
     vcf_file.seek(0)
@@ -191,10 +190,10 @@ def main():
             return
 
         from dogneo.ui.charts import (
-            score_distribution_chart,
             binding_heatmap,
-            score_radar_chart,
             candidate_scatter,
+            score_distribution_chart,
+            score_radar_chart,
         )
 
         tab1, tab2, tab3, tab4 = st.tabs(["Score Distribution", "Binding Heatmap", "Radar", "Scatter"])

@@ -12,7 +12,7 @@ import logging
 import time
 from abc import ABC, abstractmethod
 
-from dogneo.llm.cli_wrapper import call_ai_cli, CLIResult
+from dogneo.llm.cli_wrapper import call_ai_cli
 
 logger = logging.getLogger(__name__)
 

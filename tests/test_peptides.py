@@ -5,7 +5,6 @@ import pytest
 
 from dogneo.core.peptides import MutantPeptide, ProteinDatabase
 
-
 # ---------------------------------------------------------------------------
 # MutantPeptide
 # ---------------------------------------------------------------------------

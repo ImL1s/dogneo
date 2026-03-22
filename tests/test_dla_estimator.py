@@ -5,8 +5,6 @@ Based on published DLA-88 binding motifs.
 """
 from __future__ import annotations
 
-import pytest
-
 
 class TestDLAEstimator:
 

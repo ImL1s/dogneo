@@ -4,8 +4,6 @@ TDD Phase 5: Codon-optimized mRNA construct from top candidates.
 """
 from __future__ import annotations
 
-import pytest
-
 from dogneo.core.binding import BindingPrediction
 from dogneo.core.peptides import MutantPeptide
 from dogneo.core.ranking import NeoantigenCandidate
@@ -21,7 +19,7 @@ def _make_candidate(gene: str, peptide_seq: str, rank: int = 1) -> NeoantigenCan
             expression_tpm=85.0,
         ),
         peptide=MutantPeptide(
-            gene=gene, variant_id=f"chr1:100:G>A",
+            gene=gene, variant_id="chr1:100:G>A",
             mutation="p.V245I", wt_sequence="A" * len(peptide_seq),
             mut_sequence=peptide_seq, position=2,
             length=len(peptide_seq), mhc_class=1,
@@ -46,7 +44,7 @@ class TestCodonOptimize:
         assert all(c in "ACGU" for c in result)
 
     def test_codon_optimize_output_translates_back(self):
-        from dogneo.core.mrna_designer import codon_optimize, _translate_rna
+        from dogneo.core.mrna_designer import _translate_rna, codon_optimize
 
         protein = "RAIVGAPPS"
         rna = codon_optimize(protein)
@@ -54,7 +52,7 @@ class TestCodonOptimize:
         assert translated == protein
 
     def test_codon_optimize_uses_canine_table(self):
-        from dogneo.core.mrna_designer import codon_optimize, CANINE_CODON_TABLE
+        from dogneo.core.mrna_designer import CANINE_CODON_TABLE
 
         # Canine table should exist and have entries
         assert len(CANINE_CODON_TABLE) == 20  # 20 amino acids
