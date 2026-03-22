@@ -137,12 +137,12 @@ class TestIEDBClient:
 class TestBindingFallback:
     """Test auto-fallback chain: netmhcpan → iedb → none."""
 
-    def test_resolve_binding_tool_returns_iedb_when_no_netmhcpan(self):
+    def test_resolve_binding_tool_returns_estimator_when_no_netmhcpan(self):
         from dogneo.app.rank_pipeline import _resolve_binding_tool
 
         with patch("shutil.which", return_value=None):
             tool = _resolve_binding_tool("auto")
-        assert tool == "iedb"
+        assert tool == "estimator"
 
     def test_resolve_binding_tool_returns_netmhcpan_when_available(self):
         from dogneo.app.rank_pipeline import _resolve_binding_tool

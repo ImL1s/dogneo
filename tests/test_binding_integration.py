@@ -109,8 +109,8 @@ class TestPipelineWithIEDB:
         scores = [c.composite_score for c in scored]
         assert scores == sorted(scores, reverse=True)
 
-    def test_pipeline_auto_resolves_to_iedb(self, tmp_path):
-        """binding_tool=auto should resolve to iedb when netMHCpan not installed."""
+    def test_pipeline_auto_resolves_to_estimator(self, tmp_path):
+        """binding_tool=auto should resolve to estimator when netMHCpan not installed."""
         from dogneo.app.rank_pipeline import RankInput, run_rank_pipeline
 
         import dogneo.data as _data_pkg
@@ -129,11 +129,10 @@ class TestPipelineWithIEDB:
         output_dir = tmp_path / "output"
         output_dir.mkdir()
 
-        with patch("shutil.which", return_value=None), \
-             patch("dogneo.core.iedb_client.requests.post") as mock_post:
-            mock_post.return_value = self._make_mock_response(
-                ["RAIVGAPPS"], ["DLA-88*001:01"]
-            )
+        with patch("shutil.which", return_value=None):
             result = run_rank_pipeline(inp, output_dir)
 
-        assert result.binding_tool_used == "iedb"
+        assert result.binding_tool_used == "estimator"
+        # All candidates should have real scores (not NaN)
+        scored = [c for c in result.candidates if not math.isnan(c.binding.affinity_nm)]
+        assert len(scored) == len(result.candidates)

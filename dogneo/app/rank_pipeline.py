@@ -77,15 +77,14 @@ def _internet_available(timeout: float = 3.0) -> bool:
 def _resolve_binding_tool(tool: str) -> str:
     """Resolve binding tool with auto-fallback.
 
-    Priority: netmhcpan (local) → iedb (remote) → none
+    Priority: netmhcpan (local) → dogneo-estimator (built-in) → none
+    Note: IEDB API does not support DLA alleles, so we skip it for canine work.
     """
     if tool != "auto":
         return tool
     if shutil.which("netMHCpan"):
         return "netmhcpan"
-    if _internet_available():
-        return "iedb"
-    return "none"
+    return "estimator"
 
 
 def _auto_detect_proteome(explicit_path: Path | None) -> Path | None:
@@ -180,7 +179,14 @@ def run_rank_pipeline(inp: RankInput, output_dir: Path) -> RankResult:
 
     # Run binding prediction if tool available
     predictions_by_key: dict[tuple[str, str], BindingPrediction] = {}
-    if binding_tool_used == "iedb" and all_peptides and alleles:
+    if binding_tool_used == "estimator" and all_peptides and alleles:
+        from dogneo.core.dla_estimator import estimate_binding
+
+        preds = estimate_binding(all_peptides, alleles)
+        for pred in preds:
+            predictions_by_key[(pred.peptide_sequence, pred.allele)] = pred
+        logger.info("Built-in estimator produced %d binding predictions", len(preds))
+    elif binding_tool_used == "iedb" and all_peptides and alleles:
         try:
             from dogneo.core.iedb_client import IEDBClient
 
